@@ -1,0 +1,922 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>fx Calculator Simulators</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a workbench. Short header, two devices side by side (stacked on phones). */
+:root{
+  --bg:#eef1f4;--surface:#ffffff;--fg:#18222d;--muted:#566473;--line:#cfd7df;--accent:#0f6e8c;
+  --lcd:#c5d0bb;--lcd-ink:#17211c;
+  --font-display:"Space Grotesk",system-ui,sans-serif;--font-body:"Inter",system-ui,sans-serif;--font-mono:"JetBrains Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11171d;--surface:#1a222b;--fg:#e6ecf2;--muted:#9aa8b6;--line:#2c3844;--accent:#5cc0de;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11171d;--surface:#1a222b;--fg:#e6ecf2;--muted:#9aa8b6;--line:#2c3844;--accent:#5cc0de;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1{font-family:var(--font-display);font-size:28px;line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--font-display);font-size:17px;margin:0 0 6px}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.pick{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.pick select{font:500 14px var(--font-body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;max-width:100%}
+.pick select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bench{display:flex;flex-wrap:wrap;gap:28px 36px;justify-content:center;align-items:flex-start}
+.unit{display:flex;flex-direction:column;gap:10px;width:min(100%,360px);min-width:0}
+.unit-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.unit-h b{font-family:var(--font-display);font-size:15px}
+.unit-h span{font-size:12px;color:var(--muted)}
+.calc{border-radius:22px;padding:16px 14px 18px;background:var(--case);box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 10px 24px rgba(10,20,30,.22);outline:2px solid transparent;outline-offset:4px;transition:outline-color .15s}
+
+.calc-sci{--case:#243342;--badge:#9fb2c4;--key:#40536a;--keyfg:#f2f6fa;--num:#e3e8ec;--numfg:#18222d;--del:#cf6a4a;--delfg:#fff;--shift:#f2bd62;--alpha:#ff9b8c}
+.calc-graph{--case:#f7f7f5;--badge:#8b9096;--key:#ededeb;--keyfg:#1d2227;--num:#9c9ea0;--numfg:#ffffff;--del:#2a8db3;--delfg:#fff;--shift:#b98600;--alpha:#c4372b;--lcd:#e6f5f3;border:1px solid #d3d4d2;border-radius:30px;padding:18px 16px 22px}
+.calc-graph .lcd{border:10px solid #707274;border-radius:14px}.calc-graph .gx-lcd{padding:4px}
+.calc-graph .key{border:1px solid #b4b6b8;border-radius:5px;box-shadow:0 1px 0 #a4a6a8;font-size:12.5px;font-weight:500}
+.calc-graph .key.num{border-color:#808284;font-size:21px;font-weight:400;height:38px}
+.calc-graph .key.k-del{border-color:#1f7494;font-size:17px;font-weight:400;height:38px}
+.calc-graph .key.exe{color:#12395c;font-size:17px;font-weight:600}
+.calc-graph .key sup{font-size:.55em}.calc-graph .ser{font-family:Georgia,"Times New Roman",serif}.calc-graph .caret{font-size:15px;font-weight:700}
+.kfrac{display:inline-flex;flex-direction:column;align-items:center;gap:2px;vertical-align:middle}.kfrac i{display:block;width:9px;height:5px;border:1.5px solid currentColor;border-radius:1px}.kfrac i:first-child{box-shadow:0 3.5px 0 -1.5px currentColor}
+.calc-graph .dpad{position:relative;justify-self:center;align-self:center;aspect-ratio:1;height:100%;max-height:74px;padding:0;gap:0;background:#dededc;border-radius:12px}
+.calc-graph .dpad::before,.calc-graph .dpad::after{content:"";position:absolute;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%)}
+.calc-graph .dpad::before{inset:9%;background:#c3c5c6}.calc-graph .dpad::after{inset:30%;background:#e6e6e4}
+.calc-graph .dp{position:relative;z-index:1;background:transparent;border:0;box-shadow:none;color:transparent;border-radius:6px}
+.badge{font-family:var(--font-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--badge);margin:0 2px 8px}
+.lcd{background:var(--lcd);color:var(--lcd-ink);border-radius:7px;border:3px solid #10161c;font-family:var(--font-mono)}
+.fx-lcd{height:124px;padding:3px 9px 5px;display:flex;flex-direction:column;overflow:hidden}
+.fx-ind{display:flex;gap:7px;font-size:9px;height:13px;line-height:13px;font-weight:700}
+.fx-ind span{visibility:hidden}.fx-ind span.on{visibility:visible}
+.fx-body{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+.fx-in{font-size:19px;white-space:nowrap;overflow:hidden;height:38px;line-height:38px;position:relative}
+.fx-in .frac,.fx-out.sm .frac{vertical-align:middle;font-size:.68em}.mx{display:inline-flex;align-items:center;vertical-align:middle}.mx .frac{font-size:.68em}
+.fx-in .frac>span{min-width:.7em;min-height:1.12em;text-align:center}.frac>span:empty::after,.mxw:empty::after{content:'▫'}
+.fx-out{font-size:29px;font-weight:700;min-height:50px;display:flex;justify-content:flex-end;align-items:center;white-space:nowrap}
+.fx-out.sm{font-size:18px;min-height:24px;font-weight:500}
+.frac{display:inline-flex;flex-direction:column;align-items:center;font-size:.66em;line-height:1.12;margin:0 3px}
+.frac>span:first-child{border-bottom:2px solid currentColor}.frac>span{padding:0 4px}
+.unit[hidden]{display:none}
+.cur{display:inline-block;width:2px;height:1.05em;background:currentColor;vertical-align:-3px;margin:0 -1px;animation:blink 1.06s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.cur{animation:none}}
+.x10{font-size:.68em}.ng{font-size:.8em;vertical-align:.12em}.lbl{margin-left:10px;font-weight:700}
+.fx-menu{font:inherit;font-size:16.5px;line-height:1.28;margin:0;white-space:pre}.fx-menu .pg{font-size:11px}
+.fx-tbl{border-collapse:collapse;font-size:13.5px;width:100%;table-layout:fixed}
+.fx-tbl th{font-weight:700;width:auto}.fx-tbl th:first-child{width:22px}
+.fx-tbl td{border:1px solid var(--lcd-ink);text-align:right;padding:0 4px;height:19px;overflow:hidden}
+.fx-tbl td.sel{background:var(--lcd-ink);color:var(--lcd)}
+.pair{font-size:18px;text-align:right;line-height:1.25}
+.gx-lcd{padding:6px}.gx-lcd canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.keys{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.grid6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px 6px}
+.grid5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px 8px}
+.kc{display:flex;flex-direction:column;min-width:0}
+.kl{display:flex;justify-content:space-between;gap:2px;font-size:9px;font-weight:600;height:13px;line-height:13px;padding:0 1px;white-space:nowrap;overflow:hidden}
+.sl{color:var(--shift)}.al{color:var(--alpha)}
+.key{height:27px;border-radius:7px;border:0;padding:0;font-family:var(--font-body);font-size:11.5px;font-weight:600;cursor:pointer;background:var(--key);color:var(--keyfg);box-shadow:0 2px 0 rgba(0,0,0,.35);touch-action:manipulation;min-width:0}
+.key:active{transform:translateY(2px);box-shadow:none}
+.key:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.key.num{height:36px;font-size:17px;background:var(--num);color:var(--numfg)}
+.key.k-del{height:36px;font-size:13px;background:var(--del);color:var(--delfg)}
+.key.fk{height:22px;background:var(--key);color:var(--keyfg)}
+.key.k-shift{background:var(--shift);color:#201400}.calc-graph .key.k-shift{background:var(--key);color:var(--shift)}
+.key.k-alpha{background:var(--alpha);color:#2a0600}.calc-graph .key.k-alpha{background:var(--key);color:var(--alpha)}
+.key.lit{box-shadow:0 0 0 2px var(--case),0 0 0 4px currentColor}
+.dpad{grid-column:span 2;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;padding:4px 6px;align-self:stretch}
+.dp{height:auto;font-size:9px;border-radius:5px}.dp-up{grid-area:1/2}.dp-left{grid-area:2/1}.dp-right{grid-area:2/3}.dp-down{grid-area:3/2}
+@media (max-width:640px){</style>
+<div class="wrap">
+  <header>
+    <h1>fx Calculator Simulators</h1>
+    <label class="pick" for="calc-pick">Calculator <select id="calc-pick"><option value="sci">fx-82AU PLUS II (scientific)</option><option value="graph">fx-9860GIII (graphing)</option></select></label>
+  </header>
+  <div class="bench">
+    <section class="unit" id="unit-sci"><div class="calc calc-sci"><div class="badge">Scientific · 2-line natural display</div><div id="fx"></div></div></section>
+    <section class="unit" id="unit-graph" hidden><div class="calc calc-graph"><div class="badge">Graphing · 128 × 64</div><div id="gx"></div></div></section>
+  </div>
+</div>
+<script>
+'use strict';
+/* ===== Shared maths engine ===== */
+class CalcError extends Error{constructor(k){super(k);this.kind=k}}
+const ME=()=>{throw new CalcError('Math ERROR')},SE=()=>{throw new CalcError('Syntax ERROR')};
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t}return a};
+const LIM=1e10,SAFE=4e15;
+const isF=v=>typeof v==='object'&&v!==null;
+const num=v=>isF(v)?v.n/v.d:v;
+function fl(x){if(Number.isNaN(x)||!isFinite(x)||Math.abs(x)>=1e100)ME();return Math.abs(x)<1e-99?0:x}
+function F(n,d=1){if(d===0)ME();if(d<0){n=-n;d=-d}const g=gcd(n,d)||1;n/=g;d/=g;if(Math.abs(n)>=LIM||d>=LIM)return fl(n/d);return{n:n||0,d}}
+const I=x=>Number.isInteger(x)&&Math.abs(x)<LIM?F(x):fl(x);
+function add(a,b){
+  if(isF(a)&&isF(b)){const p=a.n*b.d,q=b.n*a.d,d=a.d*b.d;if(Math.abs(p)<SAFE&&Math.abs(q)<SAFE&&d<SAFE)return F(p+q,d)}
+  const x=num(a),y=num(b),r=x+y;
+  if(r!==0&&Math.abs(r)<1e-13*Math.max(Math.abs(x),Math.abs(y)))return 0;
+  return fl(r)}
+const neg=a=>isF(a)?{n:-a.n||0,d:a.d}:-a;
+const sub=(a,b)=>add(a,neg(b));
+function mul(a,b){if(isF(a)&&isF(b)){const n=a.n*b.n,d=a.d*b.d;if(Math.abs(n)<SAFE&&d<SAFE)return F(n,d)}return fl(num(a)*num(b))}
+function div(a,b){if(num(b)===0)ME();if(isF(a)&&isF(b)){const n=a.n*b.d,d=a.d*b.n;if(Math.abs(n)<SAFE&&Math.abs(d)<SAFE)return F(n,d)}return fl(num(a)/num(b))}
+function pow(a,b){const x=num(a),y=num(b);
+  if(x===0){if(y<=0)ME();return F(0)}
+  if(isF(b)&&b.d===1&&isF(a)&&Math.abs(b.n)<=400){let r=F(1),k=Math.abs(b.n),base=a;while(k){if(k&1)r=mul(r,base);k>>=1;if(k)base=mul(base,base)}return b.n<0?div(F(1),r):r}
+  if(x<0){if(Number.isInteger(y))return fl(Math.pow(x,y));if(isF(b)&&b.d%2===1){const r=Math.pow(-x,y);return fl(b.n%2?-r:r)}ME()}
+  return nice(Math.pow(x,y))}
+function nice(x){x=fl(x);if(x===0)return 0;const r=parseFloat(x.toPrecision(14));return Number.isInteger(r)&&Math.abs(r)<LIM?F(r):x}
+function sqrtv(a){const x=num(a);if(x<0)ME();if(isF(a)){const p=Math.round(Math.sqrt(a.n)),q=Math.round(Math.sqrt(a.d));if(p*p===a.n&&q*q===a.d)return F(p,q)}return Math.sqrt(x)}
+function fact(a){const x=num(a);if(!Number.isInteger(x)||x<0||x>69)ME();let r=1;for(let k=2;k<=x;k++)r*=k;return I(r)}
+function perm(a,b,comb){const n=num(a),r=num(b);if(!Number.isInteger(n)||!Number.isInteger(r)||r<0||r>n||n>=1e10)ME();
+  let k=comb?Math.min(r,n-r):r;if(k>1e6)ME();let c=1;for(let j=1;j<=k;j++){c=comb?c*(n-k+j)/j:c*(n-j+1);if(c>=1e100)ME()}return I(Math.round(c))}
+
+function evaluate(toks,ctx){
+  let i=0;const vars=ctx.vars||{};ctx.pair=null;
+  const peek=()=>toks[i];
+  const isDig=t=>t!==undefined&&t.length===1&&((t>='0'&&t<='9')||t==='.');
+  const close=()=>{if(peek()===')')i++;else if(peek()!==undefined)SE()};
+  const A=ctx.angle||'D';
+  const toR=x=>A==='D'?(x%360)*Math.PI/180:A==='G'?(x%400)*Math.PI/200:x;
+  const frR=x=>A==='D'?x*180/Math.PI:A==='G'?x*200/Math.PI:x;
+  const snap=x=>{x=fl(x);if(Math.abs(x)<1e-15)return F(0);x=parseFloat(x.toPrecision(15));for(const d of[1,2,4,5,10])if(Number.isInteger(x*d)&&Math.abs(x*d)<LIM)return F(x*d,d);return x};
+  const one=a=>{if(a.length!==1)SE();return num(a[0])};
+  const two=a=>{if(a.length!==2)SE();return[num(a[0]),num(a[1])]};
+  const FN={
+    sin:a=>snap(Math.sin(toR(one(a)))),cos:a=>snap(Math.cos(toR(one(a)))),
+    tan:a=>{const r=toR(one(a));if(Math.abs(Math.cos(r))<1e-15)ME();return snap(Math.tan(r))},
+    'sin⁻¹':a=>{const x=one(a);if(Math.abs(x)>1)ME();return snap(frR(Math.asin(x)))},
+    'cos⁻¹':a=>{const x=one(a);if(Math.abs(x)>1)ME();return snap(frR(Math.acos(x)))},
+    'tan⁻¹':a=>snap(frR(Math.atan(one(a)))),
+    sinh:a=>snap(Math.sinh(one(a))),cosh:a=>snap(Math.cosh(one(a))),tanh:a=>snap(Math.tanh(one(a))),
+    'sinh⁻¹':a=>snap(Math.asinh(one(a))),
+    'cosh⁻¹':a=>{const x=one(a);if(x<1)ME();return snap(Math.acosh(x))},
+    'tanh⁻¹':a=>{const x=one(a);if(Math.abs(x)>=1)ME();return snap(Math.atanh(x))},
+    log:a=>{if(a.length===2){const[b,x]=two(a);if(b<=0||b===1||x<=0)ME();return snap(Math.log(x)/Math.log(b))}const x=one(a);if(x<=0)ME();return snap(Math.log10(x))},
+    ln:a=>{const x=one(a);if(x<=0)ME();return snap(Math.log(x))},
+    '10^':a=>{one(a);return pow(F(10),a[0])},'e^':a=>fl(Math.exp(one(a))),
+    '√':a=>{one(a);return sqrtv(a[0])},
+    '∛':a=>{const r=Math.cbrt(one(a));return Number.isInteger(r)?I(r):r},
+    Abs:a=>{one(a);const v=a[0];return isF(v)?{n:Math.abs(v.n),d:v.d}:Math.abs(v)},
+    Int:a=>I(Math.trunc(one(a))),Frac:a=>{const x=one(a);return sub(a[0],I(Math.trunc(x)))},
+    Pol:a=>{const[x,y]=two(a);const r=Math.hypot(x,y),t=num(snap(frR(Math.atan2(y,x))));if('X'in vars){vars.X=r;vars.Y=t}ctx.pair=[['r',r],['θ',t]];return r},
+    Rec:a=>{const[r,t]=two(a);const x=num(snap(r*Math.cos(toR(t)))),y=num(snap(r*Math.sin(toR(t))));if('X'in vars){vars.X=x;vars.Y=y}ctx.pair=[['X',x],['Y',y]];return x},
+    'RanInt#':a=>{const[p,q]=two(a);if(!Number.isInteger(p)||!Number.isInteger(q)||p>q)ME();return I(p+Math.floor(Math.random()*(q-p+1)))},
+    Rnd:a=>{const x=one(a);return ctx.rnd?ctx.rnd(x):x}
+  };
+  const BARE=['√','∛','e^','10^'];
+  const preName=t=>{if(typeof t!=='string')return null;if(BARE.includes(t))return t;if(t.endsWith(' ')&&FN[t.slice(0,-1)])return t.slice(0,-1);return null};
+  const parName=t=>typeof t==='string'&&t.length>1&&t.endsWith('(')&&FN[t.slice(0,-1)]?t.slice(0,-1):null;
+  function number(){
+    let s='';while(isDig(peek()))s+=toks[i++];
+    let e=null;
+    if(peek()==='EE'){i++;let sg='';if(peek()==='-'||peek()==='−'){i++;sg='-'}else if(peek()==='+')i++;let ds='';while(isDig(peek())&&peek()!=='.')ds+=toks[i++];if(!ds||ds.length>3)SE();e=parseInt(sg+ds)}
+    if((s.match(/\./g)||[]).length>1||s==='.')SE();
+    if(s==='')s='1';
+    const x=parseFloat(s+(e!==null?'e'+e:''));
+    const m=s.replace('.','');const k=s.includes('.')?s.length-s.indexOf('.')-1:0;const ee=(e||0)-k;
+    if(m.length<=15){let n=parseInt(m),d=1;if(ee>=0&&ee<16)n*=10**ee;else if(ee<0&&ee>-16)d=10**(-ee);else return fl(x);if(Number.isSafeInteger(n))return F(n,d)}
+    return fl(x)}
+  function special(t){if(ctx.special){const v=ctx.special(t,true);if(v!==undefined)return true}return false}
+  function startsPrimary(t,noFn){
+    if(t===undefined)return false;
+    if(t==='('||t==='π'||t==='econ'||t==='Ans'||t==='Ran#'||t==='EE'||isDig(t))return true;
+    if(Object.prototype.hasOwnProperty.call(vars,t))return true;
+    if(parName(t)||preName(t))return !noFn;
+    return special(t)}
+  function primary(){
+    const t=peek();if(t===undefined)SE();
+    if(isDig(t)||t==='EE')return number();
+    i++;
+    if(t==='('){const v=expr();close();return v}
+    const pn=parName(t);
+    if(pn){const args=[expr()];while(peek()===','){i++;args.push(expr())}close();return FN[pn](args)}
+    const pr=preName(t);
+    if(pr)return FN[pr]([implied(true)]);
+    if(t==='π')return Math.PI;if(t==='econ')return Math.E;
+    if(t==='Ans')return ctx.ans;
+    if(t==='Ran#')return F(Math.floor(Math.random()*1000),1000);
+    if(Object.prototype.hasOwnProperty.call(vars,t))return vars[t];
+    if(ctx.special){const v=ctx.special(t);if(v!==undefined)return v}
+    SE()}
+  function powOperand(){if(peek()==='-'||peek()==='−'){i++;return neg(powOperand())}return primary()}
+  function postfix(){
+    let v=primary();
+    for(;;){const t=peek();
+      if(t==='²'){i++;v=mul(v,v)}
+      else if(t==='³'){i++;v=mul(v,mul(v,v))}
+      else if(t==='⁻¹'){i++;v=div(F(1),v)}
+      else if(t==='!'){i++;v=fact(v)}
+      else if(t==='%'){i++;v=div(v,F(100))}
+      else if(t==='^('){i++;const e=expr();close();v=pow(v,e)}
+      else if(t==='^'){i++;v=pow(v,powOperand())}
+      else if(t==='ˣ√('){i++;const r=expr();close();v=pow(r,div(F(1),v))}
+      else if(t==='ˣ√'){i++;v=pow(powOperand(),div(F(1),v))}
+      else if(t==='°'){i++;const p=[v];while(isDig(peek())&&p.length<3){p.push(number());if(peek()==='°')i++;else SE()}
+        v=p[0];if(p[1]!==undefined)v=add(v,div(p[1],F(60)));if(p[2]!==undefined)v=add(v,div(p[2],F(3600)))}
+      else if(t==='⌟'){i++;const b=primary();if(peek()==='⌟'){i++;const c=primary();v=add(v,div(b,c))}else v=div(v,b)}
+      else if(ctx.post&&ctx.post[t]){i++;v=ctx.post[t](num(v))}
+      else return v}}
+  function unary(){const t=peek();if(t==='-'||t==='−'){i++;return neg(unary())}if(t==='+'){i++;return unary()}return postfix()}
+  function implied(noFn){let v=unary();while(startsPrimary(peek(),noFn))v=mul(v,postfix());return v}
+  function permL(){let v=implied(false);for(;;){const t=peek();if(t==='nPr'||t==='nCr'){i++;v=perm(v,implied(false),t==='nCr')}else return v}}
+  function term(){let v=permL();for(;;){const t=peek();if(t==='×'){i++;v=mul(v,permL())}else if(t==='÷'){i++;v=div(v,permL())}else return v}}
+  function expr(){let v=term();for(;;){const t=peek();if(t==='+'){i++;v=add(v,term())}else if(t==='−'){i++;v=sub(v,term())}else return v}}
+  const v=expr();if(i<toks.length)SE();
+  if(!isF(v))fl(v);
+  return v}
+
+/* ----- stacked fraction templates (structural tokens inside the token list) ----- */
+const FR_OPEN=['FR{','MX{'],FR_ST=['FR{','MX{','MX,','FR|','FR}'];
+function expandFrac(toks){const o=[];for(const t of toks){if(t==='FR{'||t==='MX{')o.push('(','(');else if(t==='MX,')o.push(')','+','(');else if(t==='FR|')o.push(')','÷','(');else if(t==='FR}')o.push(')',')');else o.push(t)}return o}
+function fracInsert(ed,mixed){ed.toks.splice(ed.cur,0,...(mixed?['MX{','MX,','FR|','FR}']:['FR{','FR|','FR}']));ed.cur++}
+function fracSpan(toks,i){let o=i,d=0;if(!FR_OPEN.includes(toks[i]))for(o=i-1;o>=0;o--){if(toks[o]==='FR}')d++;else if(FR_OPEN.includes(toks[o])){if(d===0)break;d--}}
+  let c=o+1;d=0;for(;c<toks.length;c++){if(FR_OPEN.includes(toks[c]))d++;else if(toks[c]==='FR}'){if(d===0)break;d--}}return[o,c]}
+function fracDel(ed){const t=ed.toks[ed.cur-1];if(!FR_ST.includes(t))return false;const[o,c]=fracSpan(ed.toks,ed.cur-1);
+  if(ed.toks.slice(o,c+1).every(x=>FR_ST.includes(x))){ed.toks.splice(o,c-o+1);ed.cur=o}else ed.cur--;return true}
+function fracNav(ed,dir){let d=0,bar=-1;for(let i=ed.cur-1;i>=0;i--){const t=ed.toks[i];
+    if(t==='FR}')d++;
+    else if(FR_OPEN.includes(t)){if(d===0){if(dir==='down'&&bar<0){ed.cur=fracSpan(ed.toks,i)[1];return true}if(dir==='up'&&bar>=0){ed.cur=bar;return true}return false}d--}
+    else if(t==='FR|'&&d===0&&bar<0)bar=i}
+  return false}
+
+/* ----- formatting ----- */
+const strip=s=>s.includes('.')?s.replace(/0+$/,'').replace(/\.$/,''):s;
+function sciParts(x,digits){const[m,e]=x.toExponential(digits-1).split('e');return{m,e:parseInt(e)}}
+function fmtNum(x,fmt){x=num(x);const t=fmt.type,n=fmt.n;
+  if(t==='Sci')return sciParts(x,n||10);
+  if(t==='Fix'){if(Math.abs(x)>=1e10)return sciParts(x,10);return{m:x.toFixed(n),e:null}}
+  if(x===0)return{m:'0',e:null};
+  const r=sciParts(x,10),lo=n===2?-9:-2;
+  if(r.e>=10||r.e<lo){r.m=strip(r.m);return r}
+  let s=strip(x.toFixed(r.e>=0?9-r.e:(n===2?Math.min(9-r.e,11):9-r.e)));
+  if(s==='-0')s='0';
+  return{m:s,e:null}}
+function fmtPlain(x,fmt){const r=fmtNum(x,fmt);return r.e===null?r.m:r.m+'E'+(r.e<0?'-':'+')+String(Math.abs(r.e)).padStart(2,'0')}
+function toDMS(x){const s=x<0?'-':'';x=Math.abs(x);let d=Math.floor(x),m=Math.floor((x-d)*60),sec=parseFloat(((x-d)*60-m)*60).toFixed(2);
+  if(parseFloat(sec)>=60){sec='0';m++}if(m>=60){m=0;d++}return s+d+'°'+m+'′'+strip(sec)+'″'}
+function primeFactors(n){const out=[];for(let p=2;p*p<=n&&p<1e6;p+=(p===2?1:2)){let k=0;while(n%p===0){n/=p;k++}if(k)out.push([p,k])}if(n>1)out.push([n,1]);return out}
+
+/* ----- numerics ----- */
+function solveLinear(M){const n=M.length;M=M.map(r=>r.slice());
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;
+    if(Math.abs(M[p][c])<1e-12)ME();[M[c],M[p]]=[M[p],M[c]];
+    for(let r=0;r<n;r++)if(r!==c){const f=M[r][c]/M[c][c];for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k]}}
+  return M.map((r,k)=>cleanNum(r[n]/r[k]))}
+function cleanNum(x){if(Math.abs(x)<1e-12)return 0;return parseFloat(x.toPrecision(12))}
+function polyRoots(co){ // co: highest degree first; returns [{re,im}]
+  if(co[0]===0)ME();const n=co.length-1,a=co.map(c=>c/co[0]);
+  if(n===2){const b=a[1],c=a[2],D=b*b-4*c;if(D>=0){const s=Math.sqrt(D);return[{re:cleanNum((-b+s)/2),im:0},{re:cleanNum((-b-s)/2),im:0}]}
+    const s=Math.sqrt(-D)/2;return[{re:cleanNum(-b/2),im:cleanNum(s)},{re:cleanNum(-b/2),im:cleanNum(-s)}]}
+  const ev=z=>{let re=1,im=0;for(let k=1;k<=n;k++){const t=re*z.re-im*z.im+a[k];im=re*z.im+im*z.re;re=t}return{re,im}};
+  let z=[];for(let k=0;k<n;k++){const ang=2*Math.PI*k/n+0.4;z.push({re:Math.cos(ang)*(1+Math.abs(a[n])**(1/n)),im:Math.sin(ang)*(1+Math.abs(a[n])**(1/n))})}
+  for(let it=0;it<600;it++){let mv=0;for(let k=0;k<n;k++){let p=ev(z[k]),dr=1,di=0;
+      for(let j=0;j<n;j++)if(j!==k){const xr=z[k].re-z[j].re,xi=z[k].im-z[j].im;const t=dr*xr-di*xi;di=dr*xi+di*xr;dr=t}
+      const den=dr*dr+di*di||1e-300;const qr=(p.re*dr+p.im*di)/den,qi=(p.im*dr-p.re*di)/den;z[k]={re:z[k].re-qr,im:z[k].im-qi};mv=Math.max(mv,Math.abs(qr)+Math.abs(qi))}
+    if(mv<1e-15)break}
+  const mag=w=>Math.hypot(w.re,w.im);
+  const used=z.map(()=>false),cl=z.map(()=>false);
+  for(let k=0;k<n;k++){if(used[k])continue;const g=[k];for(let j=k+1;j<n;j++)if(!used[j]&&Math.hypot(z[k].re-z[j].re,z[k].im-z[j].im)<2e-4*(1+mag(z[k]))){g.push(j);used[j]=true}
+    if(g.length>1){const m={re:g.reduce((p,c)=>p+z[c].re,0)/g.length,im:g.reduce((p,c)=>p+z[c].im,0)/g.length};g.forEach(c=>{z[c]={re:m.re,im:m.im};cl[c]=true})}}
+  z=z.map((r,k)=>{if(Math.abs(r.im)<1e-7*(1+Math.abs(r.re)))r={re:r.re,im:0};
+    const c=[r];for(const q of(cl[k]?[1e6,1e5,1e4,1e3]:[1e6])){c.push({re:Math.round(r.re*q)/q,im:Math.round(r.im*q)/q});if(cl[k])c.push({re:Math.round(r.re*q)/q,im:0})}
+    let best=r,bm=mag(ev(r))+1e-13;for(const q of c.slice(1)){const m=mag(ev(q));if(m<=bm){bm=m;best=q}}
+    return{re:cleanNum(best.re),im:cleanNum(best.im)}});
+  z.sort((p,q)=>(p.im!==0)-(q.im!==0)||q.re-p.re||q.im-p.im);return z}
+function stats1(x){const n=x.length;if(!n)ME();const s=x.reduce((p,c)=>p+c,0),s2=x.reduce((p,c)=>p+c*c,0),m=s/n;
+  const v=Math.max(0,s2/n-m*m),so=x.slice().sort((p,q)=>p-q);
+  const med=a=>{const k=a.length;return k?(k%2?a[(k-1)/2]:(a[k/2-1]+a[k/2])/2):NaN};
+  const h=Math.floor(n/2);
+  return{n,sum:s,sum2:s2,mean:m,sd:Math.sqrt(v),ssd:n>1?Math.sqrt(Math.max(0,(s2-n*m*m)/(n-1))):NaN,min:so[0],max:so[n-1],med:med(so),q1:n>1?med(so.slice(0,h)):so[0],q3:n>1?med(so.slice(n-h)):so[0]}}
+function linReg(X,Y){const n=X.length;if(n<2)ME();const sx=X.reduce((p,c)=>p+c,0),sy=Y.reduce((p,c)=>p+c,0);
+  let sxx=0,sxy=0,syy=0;for(let k=0;k<n;k++){sxx+=(X[k]-sx/n)**2;sxy+=(X[k]-sx/n)*(Y[k]-sy/n);syy+=(Y[k]-sy/n)**2}
+  if(sxx===0)ME();const b=sxy/sxx,a=sy/n-b*sx/n;return{a,b,r:syy===0?NaN:sxy/Math.sqrt(sxx*syy)}}
+function quadReg(X,Y){const n=X.length;if(n<3)ME();const S=k=>X.reduce((p,c)=>p+c**k,0),T=k=>X.reduce((p,c,j)=>p+c**k*Y[j],0);
+  const[A,B,C]=solveLinear([[n,S(1),S(2),T(0)],[S(1),S(2),S(3),T(1)],[S(2),S(3),S(4),T(2)]]);return{A,B,C}}
+
+/* ===== Scientific calculator (fx-82AU PLUS II behaviour) ===== */
+const FX=(function(){
+const DISP={EE:'<span class="x10">×10</span>',econ:'<i>e</i>',nPr:'<b>P</b>',nCr:'<b>C</b>',regA:'A',regB:'B',regC:'C',regr:'r','ˣ√(':'<sup>x</sup>√(','-':'<span class="ng">-</span>'};
+const zero=()=>F(0);
+const S={toks:[],cur:0,shift:false,alpha:false,sto:false,rcl:false,mode:'COMP',angle:'D',fmt:{type:'Norm',n:1},io:'Math',fracMixed:false,
+  ans:zero(),vars:{},res:null,view:'auto',mixed:false,engE:0,err:null,menu:null,hist:[],hidx:-1,done:false,pair:null,label:'',stat:null,tab:null,off:false};
+'ABCDEFXYM'.split('').forEach(c=>S.vars[c]=zero());
+const D=n=>({l:String(n),m:'t:'+n,c:'num'});
+const KEYS={
+  shift:{l:'SHIFT',c:'k-shift'},alpha:{l:'ALPHA',c:'k-alpha'},mode:{l:'MODE',sl:'SETUP',m:'mode',s:'setup'},on:{l:'ON',m:'on'},
+  abs:{l:'Abs',m:'t:Abs('},cube:{l:'x³',m:'t:³'},inv:{l:'x⁻¹',sl:'x!',m:'t:⁻¹',s:'t:!'},logab:{l:'log<sub>a</sub>b',m:'t:log('},
+  frac:{l:'a/b',sl:'a b/c',m:'frac',s:'mixfrac'},sqrt:{l:'√',sl:'∛',m:'t:√(',s:'t:∛('},sq:{l:'x²',m:'t:²'},pw:{l:'xʸ',sl:'ˣ√',m:'t:^(',s:'t:ˣ√('},
+  log:{l:'log',sl:'10ˣ',m:'t:log(',s:'t:10^('},ln:{l:'ln',sl:'eˣ',m:'t:ln(',s:'t:e^('},
+  neg:{l:'(−)',al:'A',m:'t:-',a:'t:A'},dms:{l:'°′″',sl:'FACT',al:'B',m:'dms',s:'fact',a:'t:B'},hyp:{l:'hyp',al:'C',m:'hyp',a:'t:C'},
+  sin:{l:'sin',sl:'sin⁻¹',al:'D',m:'t:sin(',s:'t:sin⁻¹(',a:'t:D'},cos:{l:'cos',sl:'cos⁻¹',al:'E',m:'t:cos(',s:'t:cos⁻¹(',a:'t:E'},tan:{l:'tan',sl:'tan⁻¹',al:'F',m:'t:tan(',s:'t:tan⁻¹(',a:'t:F'},
+  rcl:{l:'RCL',sl:'STO',m:'rcl',s:'sto'},eng:{l:'ENG',sl:'←',m:'eng',s:'engb'},lp:{l:'(',sl:'%',m:'t:(',s:'t:%'},rp:{l:')',sl:',',al:'X',m:'t:)',s:'t:,',a:'t:X'},
+  sd:{l:'S⇔D',sl:'⇔d/c',al:'Y',m:'sd',s:'mixed',a:'t:Y'},mplus:{l:'M+',sl:'M−',al:'M',m:'mplus',s:'mminus',a:'t:M'},
+  n7:D(7),n8:D(8),n9:{...D(9),sl:'CLR',s:'clr'},del:{l:'DEL',m:'del',c:'k-del'},ac:{l:'AC',sl:'OFF',m:'ac',s:'off',c:'k-del'},
+  n4:D(4),n5:D(5),n6:D(6),mul:{l:'×',sl:'nPr',m:'t:×',s:'t:nPr',c:'num'},div:{l:'÷',sl:'nCr',m:'t:÷',s:'t:nCr',c:'num'},
+  n1:{...D(1),sl:'STAT',s:'statmenu'},n2:D(2),n3:D(3),add:{l:'+',sl:'Pol',m:'t:+',s:'t:Pol(',c:'num'},sub:{l:'−',sl:'Rec',m:'t:−',s:'t:Rec(',c:'num'},
+  n0:{...D(0),sl:'Rnd',s:'t:Rnd('},dot:{l:'.',sl:'Ran#',al:'RanInt',m:'t:.',s:'t:Ran#',a:'t:RanInt#(',c:'num'},exp:{l:'×10ˣ',sl:'π',al:'e',m:'t:EE',s:'t:π',a:'t:econ',c:'num'},
+  ans:{l:'Ans',m:'t:Ans',c:'num'},eq:{l:'=',m:'eq',c:'num'},
+  up:{l:'▲',m:'up'},down:{l:'▼',m:'down'},left:{l:'◀',m:'left'},right:{l:'▶',m:'right'}
+};
+const LAYOUT6=[['abs','cube',null,null,'inv','logab'],['frac','sqrt','sq','pw','log','ln'],['neg','dms','hyp','sin','cos','tan'],['rcl','eng','lp','rp','sd','mplus']];
+const LAYOUT5=[['n7','n8','n9','del','ac'],['n4','n5','n6','mul','div'],['n1','n2','n3','add','sub'],['n0','dot','exp','ans','eq']];
+let root,lcd;
+
+/* ---------- stats ---------- */
+const SNAMES={n:1,'x̄':1,'Σx²':1,'Σx':1,'σx':1,'sx':1,minX:1,maxX:1,'ȳ':2,'Σy²':2,'Σy':2,'Σxy':2,'Σx³':2,'Σx²y':2,'Σx⁴':2,'σy':2,'sy':2,minY:2,maxY:2,regA:2,regB:2,regC:3,regr:2};
+function regFit(){const st=S.stat,t=st.type,x=st.x,y=st.y;if(x.length<2)ME();
+  if(t===3){const q=quadReg(x,y);return{A:q.A,B:q.B,C:q.C,yh:v=>q.A+q.B*v+q.C*v*v,
+    xh:(v,k)=>{const d=q.B*q.B-4*q.C*(q.A-v);if(d<0||q.C===0)ME();return(-q.B+(k===1?1:-1)*Math.sqrt(d))/(2*q.C)}}}
+  const lx=[4,7].includes(t),ix=t===8,ly=[5,6,7].includes(t);
+  const X=x.map(v=>lx?Math.log(v):ix?1/v:v),Y=y.map(v=>ly?Math.log(v):v);
+  if(X.concat(Y).some(v=>!isFinite(v)))ME();
+  const f=linReg(X,Y),A=ly?Math.exp(f.a):f.a,B=t===6?Math.exp(f.b):f.b;
+  const yh={2:v=>A+B*v,4:v=>A+B*Math.log(v),5:v=>A*Math.exp(B*v),6:v=>A*Math.pow(B,v),7:v=>A*Math.pow(v,B),8:v=>A+B/v}[t];
+  const xh={2:v=>(v-A)/B,4:v=>Math.exp((v-A)/B),5:v=>Math.log(v/A)/B,6:v=>Math.log(v/A)/Math.log(B),7:v=>Math.pow(v/A,1/B),8:v=>B/(v-A)}[t];
+  return{A,B,r:f.r,yh,xh}}
+function statSpecial(t,probe){
+  if(S.mode!=='STAT'||!SNAMES[t])return undefined;if(probe)return 1;
+  const st=S.stat,x=st.x,y=st.y,paired=st.type>1;if(SNAMES[t]>1&&!paired)SE();
+  const sx=stats1(x),sum=(f)=>x.reduce((p,c,k)=>p+f(c,y[k]),0);
+  let v;switch(t){
+    case'n':v=sx.n;break;case'x̄':v=sx.mean;break;case'Σx²':v=sx.sum2;break;case'Σx':v=sx.sum;break;case'σx':v=sx.sd;break;case'sx':v=sx.ssd;break;case'minX':v=sx.min;break;case'maxX':v=sx.max;break;
+    case'Σxy':v=sum((a,b)=>a*b);break;case'Σx³':v=sum(a=>a**3);break;case'Σx²y':v=sum((a,b)=>a*a*b);break;case'Σx⁴':v=sum(a=>a**4);break;
+    case'regA':v=regFit().A;break;case'regB':v=regFit().B;break;case'regC':if(st.type!==3)SE();v=regFit().C;break;case'regr':if(st.type===3)SE();v=regFit().r;break;
+    default:{const sy=stats1(y);v={'ȳ':sy.mean,'Σy²':sy.sum2,'Σy':sy.sum,'σy':sy.sd,'sy':sy.ssd,minY:sy.min,maxY:sy.max}[t]}}
+  if(v===undefined||Number.isNaN(v))ME();return v}
+function statPost(){if(S.mode!=='STAT'||S.stat.type<2)return null;
+  return{'ŷ':v=>regFit().yh(v),'x̂':v=>regFit().xh(v),'x̂1':v=>regFit().xh(v,1),'x̂2':v=>regFit().xh(v,2)}}
+
+/* ---------- core ---------- */
+function mkctx(){return{angle:S.angle,vars:S.vars,ans:S.ans,special:statSpecial,post:statPost(),
+  rnd:x=>{const r=fmtNum(x,S.fmt);return parseFloat(r.m+(r.e!==null?'e'+r.e:''))}}}
+function run(toks){const c=mkctx();const v=evaluate(expandFrac(toks),c);S.pair=c.pair;return v}
+function clearEntry(){S.toks=[];S.cur=0;S.res=null;S.done=false;S.err=null;S.pair=null;S.label='';S.view='auto'}
+function ins(t){
+  if(S.done){const cont=['+','−','×','÷','^(','²','³','⁻¹','!','%','ˣ√(','nPr','nCr'].includes(t);clearEntry();if(cont){S.toks=['Ans'];S.cur=1}}
+  S.toks.splice(S.cur,0,t);S.cur++}
+function fail(e){if(!(e instanceof CalcError))console.error(e);S.err=e.kind||'Syntax ERROR';S.res=null;S.done=false}
+function exec(after){
+  if(!S.toks.length)return false;
+  try{const v=run(S.toks);S.ans=v;S.res=v;S.done=true;S.view='auto';S.mixed=S.fracMixed;S.label='';
+    S.hist.push({toks:S.toks.slice(),res:v,pair:S.pair});if(S.hist.length>40)S.hist.shift();S.hidx=S.hist.length-1;
+    if(after)after(v);return true}catch(e){fail(e);return false}}
+function openMenu(lines,pick,pages){S.menu={lines,pick,pages,p:0}}
+function modeMenu(){openMenu(['1:COMP   2:STAT','3:TABLE'],d=>{
+  if(d===1){S.mode='COMP';S.menu=null;clearEntry()}
+  else if(d===2)statType();
+  else if(d===3){S.mode='TABLE';S.menu=null;clearEntry();S.tab={stage:'f',f:[],start:1,end:5,step:1,rows:[],r:0}}})}
+const STYPES=['1-VAR','A+BX','_+CX²','ln X','e^X','A·B^X','A·X^B','1/X'];
+function statType(){openMenu(['1:1-VAR  2:A+BX','3:_+CX²  4:ln X','5:e^X    6:A·B^X','7:A·X^B  8:1/X'],d=>{
+  if(d<1||d>8)return;S.mode='STAT';S.stat={type:d,x:[],y:[],edit:true,r:0,c:0,top:0};S.menu=null;clearEntry()})}
+function setupMenu(){
+  const p1=['1:MthIO  2:LineIO','3:Deg    4:Rad','5:Gra    6:Fix','7:Sci    8:Norm'],p2=['1:ab/c   2:d/c'];
+  openMenu(p1,d=>{
+    if(S.menu.p===1){if(d===1)S.fracMixed=true;else if(d===2)S.fracMixed=false;else return;S.menu=null;return}
+    const ask=(txt,lo,hi,fn)=>openMenu([txt],k=>{if(k>=lo&&k<=hi){fn(k);S.menu=null}});
+    if(d===1){S.io='Math';S.menu=null}else if(d===2){S.io='Line';S.menu=null}
+    else if(d===3){S.angle='D';S.menu=null}else if(d===4){S.angle='R';S.menu=null}else if(d===5){S.angle='G';S.menu=null}
+    else if(d===6)ask('Fix 0~9?',0,9,k=>S.fmt={type:'Fix',n:k});
+    else if(d===7)ask('Sci 0~9?',0,9,k=>S.fmt={type:'Sci',n:k});
+    else if(d===8)ask('Norm 1~2?',1,2,k=>S.fmt={type:'Norm',n:k})},[p1,p2])}
+function hypMenu(){openMenu(['1:sinh   2:cosh','3:tanh   4:sinh⁻¹','5:cosh⁻¹ 6:tanh⁻¹'],d=>{const t=[,'sinh(','cosh(','tanh(','sinh⁻¹(','cosh⁻¹(','tanh⁻¹('][d];if(t){S.menu=null;ins(t)}})}
+function clrMenu(){openMenu(['Clear?','1:Setup  2:Memory','3:All'],d=>{
+  if(d<1||d>3)return;
+  if(d!==2){S.angle='D';S.fmt={type:'Norm',n:1};S.io='Math';S.fracMixed=false;S.mode='COMP'}
+  if(d!==1){Object.keys(S.vars).forEach(k=>S.vars[k]=zero());S.ans=zero();S.hist=[]}
+  clearEntry();openMenu(['Clear complete','','Press [AC] key'],()=>{})})}
+function statMenu(){const st=S.stat,p=st.type>1,q=st.type===3;
+  const sub=(lines,toks)=>openMenu(lines,d=>{if(toks[d-1]){S.menu=null;ins(toks[d-1])}});
+  const items=[['Type',statType],['Data',()=>{st.edit=true;S.menu=null;clearEntry()}],
+    ['Sum',()=>p?sub(['1:Σx²  2:Σx','3:Σy²  4:Σy','5:Σxy  6:Σx³','7:Σx²y 8:Σx⁴'],['Σx²','Σx','Σy²','Σy','Σxy','Σx³','Σx²y','Σx⁴']):sub(['1:Σx²  2:Σx'],['Σx²','Σx'])],
+    ['Var',()=>p?sub(['1:n   2:x̄','3:σx  4:sx','5:ȳ   6:σy','7:sy'],['n','x̄','σx','sx','ȳ','σy','sy']):sub(['1:n   2:x̄','3:σx  4:sx'],['n','x̄','σx','sx'])]];
+  if(p)items.push(['Reg',()=>q?sub(['1:A   2:B','3:C   4:x̂1','5:x̂2  6:ŷ'],['regA','regB','regC','x̂1','x̂2','ŷ']):sub(['1:A   2:B','3:r   4:x̂','5:ŷ'],['regA','regB','regr','x̂','ŷ'])]);
+  items.push(['MinMax',()=>p?sub(['1:minX 2:maxX','3:minY 4:maxY'],['minX','maxX','minY','maxY']):sub(['1:minX 2:maxX'],['minX','maxX'])]);
+  const lines=[];for(let k=0;k<items.length;k+=2)lines.push(((k+1)+':'+items[k][0]).padEnd(9)+(items[k+1]?(k+2)+':'+items[k+1][0]:''));
+  openMenu(lines,d=>{if(items[d-1])items[d-1][1]()})}
+
+function edKey(a){ // shared token editing; returns true if handled
+  if(a==='frac'||a==='mixfrac'){if(S.io==='Line')ins('⌟');else{if(S.done)clearEntry();fracInsert(S,a==='mixfrac')}return true}
+  if((a==='up'||a==='down')&&!S.done&&S.toks.length&&fracNav(S,a))return true;
+  if(a.startsWith('t:')){ins(a.slice(2));return true}
+  if(a==='del'){if(S.done){S.done=false;S.res=null;S.cur=S.toks.length}else if(S.cur>0){if(!fracDel(S)){S.toks.splice(S.cur-1,1);S.cur--}}return true}
+  if(a==='left'||a==='right'){if(S.done){S.done=false;S.res=null;S.cur=a==='left'?S.toks.length:0}
+    else if(a==='left')S.cur=S.cur>0?S.cur-1:S.toks.length;else S.cur=S.cur<S.toks.length?S.cur+1:0;return true}
+  return false}
+function compKey(a){
+  if(edKey(a))return;
+  const needRes=()=>S.done&&S.res!==null;
+  switch(a){
+    case'eq':exec();break;
+    case'ac':clearEntry();break;
+    case'up':if(S.hist.length&&(S.done||!S.toks.length)){if(!S.done)S.hidx=S.hist.length;if(S.hidx>0){S.hidx--;loadHist()}}break;
+    case'down':if(S.done&&S.hidx<S.hist.length-1){S.hidx++;loadHist()}break;
+    case'sd':if(needRes()&&isF(S.res)&&S.res.d!==1)S.view=(S.view==='dec'?'auto':'dec');else if(needRes())S.view='auto';break;
+    case'mixed':if(needRes()){S.mixed=!S.mixed;S.view='auto'}break;
+    case'dms':if(needRes())S.view=S.view==='dms'?'auto':'dms';else ins('°');break;
+    case'fact':if(needRes()){const x=num(S.res);if(Number.isInteger(x)&&x>1&&x<1e10)S.view=S.view==='fact'?'auto':'fact'}break;
+    case'eng':case'engb':if(needRes()){const x=num(S.res);if(S.view!=='eng'){S.engE=x===0?0:Math.floor(Math.log10(Math.abs(x))/3)*3;S.view='eng'}else S.engE+=a==='eng'?-3:3}break;
+    case'hyp':hypMenu();break;
+    case'rcl':S.rcl=true;S.sto=false;break;case'sto':S.sto=true;S.rcl=false;break;
+    case'mplus':case'mminus':{const f=v=>{S.vars.M=a==='mplus'?add(S.vars.M,v):sub(S.vars.M,v);S.label=a==='mplus'?'M+':'M−'};if(S.done&&S.res!==null)f(S.res);else exec(f);break}
+    case'statmenu':if(S.mode==='STAT')statMenu();break;
+    case'clr':clrMenu();break;
+    case'off':S.off=true;break}}
+function loadHist(){const h=S.hist[S.hidx];S.toks=h.toks.slice();S.cur=S.toks.length;S.res=h.res;S.pair=h.pair;S.done=true;S.view='auto';S.label=''}
+function statEditKey(a){const st=S.stat,cols=st.type>1?2:1,n=st.x.length;
+  const fix=()=>{st.r=Math.max(0,Math.min(st.r,st.x.length));st.c=Math.max(0,Math.min(st.c,cols-1));if(st.r<st.top)st.top=st.r;if(st.r>st.top+2)st.top=st.r-2};
+  if(a==='eq'){if(!S.toks.length)return;try{const v=num(run(S.toks));
+      if(st.r>=n){st.x.push(0);st.y.push(0)}(st.c===0?st.x:st.y)[st.r]=v;st.r++;S.toks=[];S.cur=0;fix()}catch(e){fail(e)}return}
+  if(a==='ac'){if(S.toks.length){S.toks=[];S.cur=0}else{st.edit=false;clearEntry()}return}
+  if(!S.toks.length){
+    if(a==='up'){st.r--;return fix()}if(a==='down'){st.r++;return fix()}if(a==='left'){st.c--;return fix()}if(a==='right'){st.c++;return fix()}
+    if(a==='del'){if(st.r<n){st.x.splice(st.r,1);st.y.splice(st.r,1)}return fix()}}
+  if(a==='statmenu')return statMenu();
+  if(a.startsWith('t:')||['del','left','right','up','down','frac','mixfrac'].includes(a)){S.done=false;edKey(a)}}
+function tableKey(a){const tb=S.tab;
+  if(tb.stage==='view'){if(a==='up')tb.r=Math.max(0,tb.r-1);else if(a==='down')tb.r=Math.min(tb.rows.length-1,tb.r+1);else if(a==='ac'){tb.stage='f';S.toks=tb.f.slice();S.cur=S.toks.length}return}
+  if(a==='ac'){S.toks=[];S.cur=0;return}
+  if(a==='eq'){
+    if(tb.stage==='f'){if(!S.toks.length)return;tb.f=S.toks.slice();tb.stage='start';S.toks=[];S.cur=0;return}
+    try{if(S.toks.length)tb[tb.stage]=num(run(S.toks));S.toks=[];S.cur=0;
+      if(tb.stage==='start')tb.stage='end';else if(tb.stage==='end')tb.stage='step';
+      else{if(tb.step<=0||tb.end<tb.start)ME();const cnt=Math.floor((tb.end-tb.start)/tb.step+1e-9)+1;
+        if(cnt>30){S.err='Insufficient MEM';tb.stage='f';S.toks=tb.f.slice();S.cur=S.toks.length;return}
+        tb.rows=[];const keep=S.vars.X;
+        for(let k=0;k<cnt;k++){const x=parseFloat((tb.start+k*tb.step).toPrecision(12));S.vars.X=x;let y;try{y=num(run(tb.f))}catch(e){if(e.kind==='Syntax ERROR'){S.vars.X=keep;throw e}y=null}tb.rows.push([x,y])}
+        S.vars.X=keep;tb.r=0;tb.stage='view'}
+    }catch(e){fail(e);if(tb.stage!=='f'){tb.stage='f';S.toks=tb.f.slice();S.cur=S.toks.length}}
+    return}
+  S.done=false;edKey(a)}
+function act(a){
+  if(S.off){if(a==='on')S.off=false;return}
+  if(a==='on'){clearEntry();S.menu=null;if(S.mode==='TABLE'){S.tab.stage='f'}return}
+  if(S.menu){
+    if(a.startsWith('t:')&&/^\d$/.test(a.slice(2)))return S.menu.pick(parseInt(a.slice(2)));
+    if(a==='ac'){S.menu=null;return}
+    if((a==='down'||a==='up')&&S.menu.pages){S.menu.p=(S.menu.p+1)%S.menu.pages.length;S.menu.lines=S.menu.pages[S.menu.p];return}
+    if(a==='mode')return modeMenu();if(a==='setup')return setupMenu();return}
+  if(S.err){if(a==='ac')clearEntry();else if(a==='left'||a==='right'){S.err=null;S.done=false;S.cur=S.toks.length}return}
+  if(a==='mode')return modeMenu();if(a==='setup')return setupMenu();
+  if(S.mode==='STAT'&&S.stat.edit)return statEditKey(a);
+  if(S.mode==='TABLE')return tableKey(a);
+  compKey(a)}
+function press(id){
+  const key=KEYS[id];if(!key)return;
+  if(id==='shift'){S.shift=!S.shift;S.alpha=false;return render()}
+  if(id==='alpha'){S.alpha=!S.alpha;S.shift=false;return render()}
+  const a=S.shift&&key.s?key.s:S.alpha&&key.a?key.a:key.m;
+  S.shift=S.alpha=false;
+  if((S.sto||S.rcl)&&!S.menu&&!S.err){const sto=S.sto;S.sto=S.rcl=false;const L=key.a&&/^t:[A-FXYM]$/.test(key.a)?key.a[2]:null;
+    if(L){if(sto){const f=v=>{S.vars[L]=v;S.label='→'+L};if(S.done&&S.res!==null)f(S.res);else exec(f)}
+      else{clearEntry();S.toks=[L];S.cur=1;exec()}
+      return render()}}
+  if(a)act(a);render()}
+
+/* ---------- display ---------- */
+const tokHTML=t=>DISP[t]||t;
+function numHTML(x){const r=fmtNum(x,S.fmt);return r.m.replace('-','−')+(r.e!==null?'<span class="x10">×10</span><sup>'+String(r.e).replace('-','−')+'</sup>':'')}
+function fracHTML(v,mixed){const sg=v.n<0?'−':'',n=Math.abs(v.n),d=v.d;
+  if(S.io==='Line'){return mixed&&n>d?sg+Math.floor(n/d)+'⌟'+(n%d)+'⌟'+d:sg+n+'⌟'+d}
+  const st=(a,b)=>'<span class="frac"><span>'+a+'</span><span>'+b+'</span></span>';
+  return mixed&&n>d?sg+Math.floor(n/d)+st(n%d,d):sg+st(n,d)}
+function resHTML(){const v=S.res;if(v===null)return'';
+  if(S.pair)return'<span class="pair">'+S.pair.map(p=>p[0]+'='+numHTML(p[1])).join('<br>')+'</span>';
+  const x=num(v);
+  if(S.view==='dms')return toDMS(x);
+  if(S.view==='fact')return primeFactors(x).map(([p,k])=>p+(k>1?'<sup>'+k+'</sup>':'')).join('×');
+  if(S.view==='eng')return strip((x/10**S.engE).toPrecision(10)).replace('-','−')+'<span class="x10">×10</span><sup>'+String(S.engE).replace('-','−')+'</sup>';
+  if(isF(v)&&v.d!==1&&S.view!=='dec'&&(String(Math.abs(v.n))+v.d).length<=10)return fracHTML(v,S.mixed);
+  return numHTML(x)}
+function inputHTML(prefix){let h=prefix||'';const st=[],cur='<span class="cur"></span>';
+  S.toks.forEach((t,k)=>{if(k===S.cur&&!S.done)h+=cur;
+    if(t==='FR{'){st.push(0);h+='<span class="frac"><span>'}
+    else if(t==='MX{'){st.push(1);h+='<span class="mx"><span class="mxw">'}
+    else if(t==='MX,')h+='</span><span class="frac"><span>';
+    else if(t==='FR|')h+='</span><span>';
+    else if(t==='FR}')h+='</span></span>'+(st.pop()?'</span>':'');
+    else h+=tokHTML(t)});
+  if(S.cur>=S.toks.length&&!S.done)h+=cur;return h+(S.label?'<span class="lbl">'+S.label+'</span>':'')}
+function cell(v){if(v===null||v===undefined)return'';if(v==='ERROR')return v;const r=fmtNum(v,{type:'Norm',n:1});let s=r.m;if(s.length>8)s=s.slice(0,8);return s.replace('-','−')+(r.e!==null?'ᴇ'+r.e:'')}
+function render(){
+  if(!root)return;
+  const ind=[['S',S.shift],['A',S.alpha],['M',num(S.vars.M)!==0],['STO',S.sto],['RCL',S.rcl],['STAT',S.mode==='STAT'],
+    [{D:'D',R:'R',G:'G'}[S.angle],true],['FIX',S.fmt.type==='Fix'],['SCI',S.fmt.type==='Sci'],['Math',S.io==='Math'],['▲',S.done&&S.hidx>0]];
+  let h='<div class="fx-ind">'+ind.map(([t,on])=>'<span class="'+(on?'on':'')+'">'+t+'</span>').join('')+'</div><div class="fx-body">';
+  if(S.off)h='<div class="fx-ind"></div><div class="fx-body off">';
+  else if(S.menu)h+='<pre class="fx-menu">'+S.menu.lines.join('\n')+(S.menu.pages?'\n<span class="pg">▼▲ more</span>':'')+'</pre>';
+  else if(S.err)h+='<pre class="fx-menu">'+S.err+'\n[AC]  :Cancel\n[◀][▶]:Goto</pre>';
+  else if(S.mode==='STAT'&&S.stat.edit){const st=S.stat,p=st.type>1;
+    h+='<table class="fx-tbl"><tr><th></th><th>X</th>'+(p?'<th>Y</th>':'')+'</tr>';
+    for(let r=st.top;r<st.top+3;r++){h+='<tr><th>'+(r+1)+'</th>';for(let c=0;c<(p?2:1);c++){const v=(c?st.y:st.x)[r];h+='<td class="'+(r===st.r&&c===st.c?'sel':'')+'">'+cell(v)+'</td>'}h+='</tr>'}
+    const cv=(st.c?st.y:st.x)[st.r];
+    h+='</table><div class="fx-out sm">'+(S.toks.length?inputHTML():(cv===undefined?'':numHTML(cv)))+'</div>'}
+  else if(S.mode==='TABLE'&&S.tab.stage==='view'){const tb=S.tab,top=Math.max(0,Math.min(tb.r-1,tb.rows.length-3));
+    h+='<table class="fx-tbl"><tr><th></th><th>X</th><th>F(X)</th></tr>';
+    for(let r=top;r<top+3&&r<tb.rows.length;r++)h+='<tr><th>'+(r+1)+'</th><td class="'+(r===tb.r?'sel':'')+'">'+cell(tb.rows[r][0])+'</td><td>'+cell(tb.rows[r][1]===null?'ERROR':tb.rows[r][1])+'</td></tr>';
+    const y=tb.rows[tb.r][1];h+='</table><div class="fx-out sm">'+(y===null?'ERROR':numHTML(y))+'</div>'}
+  else if(S.mode==='TABLE'){const tb=S.tab;
+    if(tb.stage==='f')h+='<div class="fx-in">'+inputHTML('f(X)=')+'</div><div class="fx-out"></div>';
+    else h+='<div class="fx-in">'+{start:'Start?',end:'End?',step:'Step?'}[tb.stage]+'</div><div class="fx-out">'+(S.toks.length?inputHTML():numHTML(tb[tb.stage]))+'</div>'}
+  else h+='<div class="fx-in">'+inputHTML()+'</div><div class="fx-out">'+resHTML()+'</div>';
+  lcd.innerHTML=h+'</div>';
+  root.querySelector('#fx-shift').classList.toggle('lit',S.shift);root.querySelector('#fx-alpha').classList.toggle('lit',S.alpha);
+  const inp=lcd.querySelector('.fx-in'),cur=lcd.querySelector('.fx-in .cur');
+  if(inp&&cur){const off=cur.offsetLeft-inp.clientWidth+14;inp.scrollLeft=off>0?off:0}}
+function keyBtn(id){const k=KEYS[id];return'<div class="kc"><div class="kl"><span class="sl">'+(k.sl||'')+'</span><span class="al">'+(k.al||'')+'</span></div><button type="button" class="key '+(k.c||'fn')+'" data-k="'+id+'" id="fx-'+id+'">'+k.l+'</button></div>'}
+function mount(el){root=el;
+  let h='<div class="lcd fx-lcd" id="fx-lcd" role="status" aria-live="off"></div><div class="keys">';
+  h+='<div class="grid6 top">'+keyBtn('shift')+keyBtn('alpha')+'<div class="dpad" style="grid-row:span 2">'+['up','left','right','down'].map(d=>'<button type="button" class="key dp dp-'+d+'" data-k="'+d+'" id="fx-'+d+'" aria-label="'+d+'">'+KEYS[d].l+'</button>').join('')+'</div>'+keyBtn('mode')+keyBtn('on');
+  h+=LAYOUT6[0].filter(Boolean).map(keyBtn).join('')+'</div>';
+  h+='<div class="grid6">'+LAYOUT6.slice(1).map(r=>r.map(keyBtn).join('')).join('')+'</div>';
+  h+='<div class="grid5">'+LAYOUT5.map(r=>r.map(keyBtn).join('')).join('')+'</div></div>';
+  el.innerHTML=h;lcd=el.querySelector('#fx-lcd');
+  el.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b)press(b.dataset.k)});
+  render()}
+const KB={Enter:'eq','=':'eq',Backspace:'del',Escape:'ac',Delete:'ac',ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right','+':'add','-':'sub','*':'mul','/':'div','(':'lp',')':'rp','.':'dot','^':'pw'};
+function keyboard(e){let id=KB[e.key];if(/^\d$/.test(e.key))id='n'+e.key;if(!id)return false;press(id);return true}
+return{mount,press,keyboard,S}})();
+/* ===== Graphing calculator (fx-9860GIII behaviour) ===== */
+const GX=(function(){
+const W=128,SC=4,INK='#0c1012',BG='#e6f5f3';
+const FONT='bold 29px "DejaVu Sans Mono","Menlo","Consolas","Liberation Mono","Courier New",monospace';
+let cv,c,root,blink=true,DRY=false,CUR=null;
+const G={shift:false,alpha:false,app:'MENU',prev:'MENU',msg:null,prompt:null,angle:'R',fmt:{type:'Norm',n:1},ans:F(0),vars:{},off:false};
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(ch=>G.vars[ch]=F(0));
+const DISPG={EE:'ᴇ',econ:'e',nPr:'P',nCr:'C'};
+const tokStr=t=>DISPG[t]||t;
+function chars(s){const out=[];for(const ch of String(s)){if(/[̀-ͯ]/.test(ch)&&out.length)out[out.length-1]+=ch;else out.push(ch)}return out}
+/* ---------- screen ---------- */
+function cls(){c.fillStyle=BG;c.fillRect(0,0,cv.width,cv.height)}
+function px(x,y){if(x>=0&&x<W&&y>=0&&y<64){c.fillStyle=INK;c.fillRect(x*SC,y*SC,SC,SC)}}
+function line(x0,y0,x1,y1){const cl=v=>Math.max(-300,Math.min(400,Math.round(v)));x0=cl(x0);y0=cl(y0);x1=cl(x1);y1=cl(y1);
+  const dx=Math.abs(x1-x0),dy=-Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;let e=dx+dy;
+  for(;;){px(x0,y0);if(x0===x1&&y0===y1)break;const e2=2*e;if(e2>=dy){e+=dy;x0+=sx}if(e2<=dx){e+=dx;y0+=sy}}}
+function glyph(x,y,ch,inv){if(DRY||x<-6||x>127)return;c.font=FONT;c.textAlign='center';c.textBaseline='middle';
+  if(inv){c.fillStyle=INK;c.fillRect(x*SC,y*SC,6*SC,8*SC);c.fillStyle=BG}else c.fillStyle=INK;
+  if(ch==='ᴇ'){c.font='bold 21px "DejaVu Sans Mono","Menlo","Consolas",monospace';c.fillText('E',x*SC+3*SC,y*SC+4*SC+5)}
+  else c.fillText(ch,x*SC+3*SC,y*SC+4*SC+2)}
+function txt(col,row,s,inv){chars(s).forEach((ch,k)=>{if(col+k>20||col+k<0)return;glyph((col+k)*6,row*8,ch,inv)})}
+const rtxt=(row,s)=>txt(21-chars(s).length,row,s);
+function fk(labels){labels.forEach((l,k)=>{if(!l)return;c.fillStyle=INK;c.fillRect((k*21+1)*SC,56*SC,20*SC,8*SC);c.fillStyle=BG;
+  c.font='bold 21px "DejaVu Sans Mono","Menlo","Consolas",monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(l,(k*21+11)*SC,60*SC+1,19*SC)})}
+/* ---------- editor ---------- */
+const mkEd=(toks,cur)=>({toks:toks?toks.slice():[],cur:cur===undefined?(toks?toks.length:0):cur});
+const edStr=ed=>ed.toks.map(tokStr).join('');
+const edCol=ed=>ed.toks.slice(0,ed.cur).reduce((p,t)=>p+chars(tokStr(t)).length,0);
+function edKey(ed,ev){
+  if(ev.startsWith('t:')){ed.toks.splice(ed.cur,0,ev.slice(2));ed.cur++;return true}
+  if(ev==='FRAC'||ev==='MIXFRAC'){if(ed.math)fracInsert(ed,ev==='MIXFRAC');else{ed.toks.splice(ed.cur,0,'⌟');ed.cur++}return true}
+  if(ev==='DEL'){if(ed.cur>0){if(!fracDel(ed))ed.toks.splice(--ed.cur,1)}else if(ed.toks.length&&!FR_ST.includes(ed.toks[0]))ed.toks.splice(0,1);return true}
+  if(ev==='LEFT'){ed.cur=ed.cur>0?ed.cur-1:ed.toks.length;return true}
+  if(ev==='RIGHT'){ed.cur=ed.cur<ed.toks.length?ed.cur+1:0;return true}
+  return false}
+function cursorAt(col,row){if(blink&&col<=20){c.fillStyle=INK;c.fillRect(col*6*SC,(row*8+6)*SC,6*SC,2*SC)}}
+function drawEd(ed,col,row,width){const s=chars(edStr(ed)),cc=edCol(ed),st=Math.max(0,cc-width+1);txt(col,row,s.slice(st,st+width).join(''));cursorAt(col+cc-st,row)}
+/* ---------- 2D maths layout (stacked fractions) ---------- */
+const rEd=(t,cur)=>{const e=mkEd(t,cur);e.math=true;return e};
+function mParse(toks){let i=0;
+  function seq(stop){const s={items:[]};while(i<toks.length&&!stop.includes(toks[i])){const t=toks[i],at=i;
+      if(t==='FR{'||t==='MX{'){i++;let w=null;if(t==='MX{'){w=seq(['MX,']);i++}const n=seq(['FR|']);i++;const d=seq(['FR}']);i++;s.items.push({f:1,w,n,d,at})}
+      else{s.items.push({s:chars(tokStr(t)),at});i++}}
+    s.end=i;return s}
+  return seq([])}
+function mMeas(s){let w=0,a=4,d=4;for(const it of s.items){
+    if(it.f){mMeas(it.n);mMeas(it.d);if(it.w)mMeas(it.w);it.fw=Math.max(it.n.wid,it.d.wid)+2;it.wid=it.fw+(it.w?it.w.wid:0);
+      it.asc=Math.max(it.n.asc+it.n.desc+1,it.w?it.w.asc:0);it.desc=Math.max(it.d.asc+it.d.desc+2,it.w?it.w.desc:0)}
+    else{it.wid=it.s.length*6;it.asc=4;it.desc=4}
+    w+=it.wid;a=Math.max(a,it.asc);d=Math.max(d,it.desc)}
+  s.wid=Math.max(w,6);s.asc=a;s.desc=d;return s}
+function mDraw(s,x,ax,cur){
+  if(!s.items.length&&cur!==s.end&&!DRY){c.strokeStyle=INK;c.lineWidth=SC;c.strokeRect((x+1)*SC+SC/2,(ax-3)*SC+SC/2,3*SC,5*SC)}
+  for(const it of s.items){if(it.at===cur)CUR={x,y:ax};
+    if(it.f){let fx=x;if(it.w){mDraw(it.w,x,ax,cur);fx+=it.w.wid}
+      if(!DRY)for(let p=0;p<it.fw;p++)px(fx+p,ax);
+      mDraw(it.n,fx+Math.floor((it.fw-it.n.wid)/2),ax-1-it.n.desc,cur);mDraw(it.d,fx+Math.floor((it.fw-it.d.wid)/2),ax+2+it.d.asc,cur)}
+    else it.s.forEach((ch,k)=>glyph(x+k*6,ax-4,ch));
+    x+=it.wid}
+  if(s.end===cur)CUR={x,y:ax}}
+/* ---------- maths helpers ---------- */
+const evalG=toks=>evaluate(expandFrac(toks),{angle:G.angle,vars:G.vars,ans:G.ans});
+const gfmt=v=>fmtPlain(num(v),G.fmt).replace('E','ᴇ');
+const nfmt=v=>fmtPlain(v,{type:'Norm',n:1}).replace('E','ᴇ');
+const resToks=(v,dec)=>isF(v)&&v.d!==1&&!dec?(v.n<0?['-']:[]).concat(['FR{'],String(Math.abs(v.n)).split(''),['FR|'],String(v.d).split(''),['FR}']):chars(gfmt(v));
+const gres=(v,dec)=>isF(v)&&v.d!==1&&!dec?(v.n<0?'-':'')+Math.abs(v.n)+'⌟'+v.d:gfmt(v);
+function short(v){const x=num(v);if(!isFinite(x))return'ERROR';for(let p=5;p>=1;p--){const s=String(parseFloat(x.toPrecision(p)));if(s.length<=5&&!s.includes('e'))return s}
+  return x.toExponential(0).replace('e+','ᴇ').replace('e','ᴇ').slice(0,6)}
+const msg=m=>{G.msg=m};
+/* ---------- generic: form, grid, lines ---------- */
+function mkForm(title,fields,fkeys,onF,onExit){return{title,fields,fkeys,onF,onExit,idx:0,ed:null}}
+function drawForm(f){txt(0,0,f.title);f.fields.forEach((fd,k)=>{if(k===f.idx&&f.ed){txt(0,1+k,fd.label+':');drawEd(f.ed,fd.label.length+1,1+k,20-fd.label.length)}
+  else txt(0,1+k,(fd.label+':'+nfmt(fd.get())).padEnd(21).slice(0,21),k===f.idx)});fk(f.fkeys)}
+function formKey(f,ev){
+  if(f.ed){if(ev==='EXE'){const v=num(evalG(f.ed.toks));f.fields[f.idx].set(v);f.ed=null;f.idx=Math.min(f.idx+1,f.fields.length-1)}else if(ev==='AC'||ev==='EXIT')f.ed=null;else edKey(f.ed,ev);return}
+  if(ev.startsWith('t:')){f.ed=mkEd();edKey(f.ed,ev)}
+  else if(ev==='UP')f.idx=Math.max(0,f.idx-1);else if(ev==='DOWN'||ev==='EXE')f.idx=Math.min(f.fields.length-1,f.idx+1);
+  else if(/^F[1-6]$/.test(ev))f.onF(+ev[1]);else if(ev==='EXIT')f.onExit()}
+const mkGrid=o=>Object.assign({r:0,c:0,top:0,left:0,ed:null,fkeys:[],vis:5},o);
+function gridClamp(g){g.c=Math.max(0,Math.min(g.c,g.nCols()-1));g.r=Math.max(0,Math.min(g.r,g.nRows(g.c)-1));
+  if(g.r<g.top)g.top=g.r;if(g.r>g.top+g.vis-1)g.top=g.r-g.vis+1;if(g.c<g.left)g.left=g.c;if(g.c>g.left+2)g.left=g.c-2}
+function drawGrid(g){gridClamp(g);const nc=g.nCols();
+  for(let j=0;j<3;j++){const cc=g.left+j;if(cc>=nc)break;txt(3+j*6,0,g.colLabel(cc).padStart(6).slice(-6))
+    for(let i=0;i<g.vis;i++){const r=g.top+i;if(r>=g.nRows(cc))break;const v=g.get(r,cc);txt(3+j*6,1+i,(v===undefined?'':short(v)).padStart(6),r===g.r&&cc===g.c)}}
+  let mr=0;for(let cc=g.left;cc<Math.min(nc,g.left+3);cc++)mr=Math.max(mr,g.nRows(cc));
+  for(let i=0;i<g.vis&&g.top+i<mr;i++)txt(0,1+i,g.rowLabel(g.top+i).padStart(3).slice(-3));
+  if(g.ed)drawEd(g.ed,0,6,21);else{const v=g.get(g.r,g.c);if(v!==undefined)rtxt(6,isFinite(num(v))?nfmt(num(v)):'ERROR')}
+  if(g.formula)g.formula(g);
+  fk(g.fkeys)}
+function gridKey(g,ev){
+  if(g.ed){if(ev==='EXE'){const v=num(evalG(g.ed.toks));g.set(g.r,g.c,v);g.ed=null;
+      if(g.adv==='right'){if(g.c<g.nCols()-1)g.c++;else if(g.r<g.nRows(0)-1){g.c=0;g.r++}}else g.r++;gridClamp(g)}
+    else if(ev==='AC'||ev==='EXIT')g.ed=null;else edKey(g.ed,ev);return true}
+  if(ev.startsWith('t:')&&g.set){g.ed=mkEd();edKey(g.ed,ev);return true}
+  const mv={UP:[-1,0],DOWN:[1,0],LEFT:[0,-1],RIGHT:[0,1]}[ev];
+  if(mv){g.r+=mv[0];g.c+=mv[1];gridClamp(g);return true}
+  if(ev==='DEL'&&g.del){g.del(g.r,g.c);gridClamp(g);return true}
+  return false}
+const mkLines=(lines,fkeys)=>({lines,top:0,fkeys:fkeys||[]});
+function drawLines(v){for(let i=0;i<7&&v.top+i<v.lines.length;i++)txt(0,i,v.lines[v.top+i]);fk(v.fkeys)}
+function linesKey(v,ev){if(ev==='UP')v.top=Math.max(0,v.top-1);else if(ev==='DOWN')v.top=Math.max(0,Math.min(v.lines.length-7,v.top+1))}
+/* ---------- MAIN MENU ---------- */
+const ITEMS=[['RUN·MAT','RUN'],['STAT',null],['e·ACT',null],['S·SHT',null],['GRAPH','GRAPH'],['DYNA',null],['TABLE',null],['RECUR',null],['CONICS',null],['EQUA','EQUA'],['PRGM',null],['TVM',null],['LINK',null],['MEMORY',null],['SYSTEM',null]];
+const MN={sel:0};
+const APPS={};
+APPS.MENU={
+  draw(){txt(0,0,'MAIN MENU');ITEMS.forEach((it,k)=>{c.globalAlpha=it[1]||k===MN.sel?1:.42;txt((k%3)*7,1+Math.floor(k/3),it[0].padEnd(7),k===MN.sel);c.globalAlpha=1});
+    txt(0,7,ITEMS[MN.sel][1]?'EXE: open':'Not simulated')},
+  key(ev){const mv={UP:-3,DOWN:3,LEFT:-1,RIGHT:1}[ev];
+    if(mv){const n=MN.sel+mv;if(n>=0&&n<ITEMS.length)MN.sel=n;return}
+    const m=/^t:([1-9])$/.exec(ev);if(m){MN.sel=+m[1]-1;ev='EXE'}
+    if(ev==='EXE'){const a=ITEMS[MN.sel][1];if(a){G.app=a;if(APPS[a].open)APPS[a].open()}else msg('Not available in this simulator')}}};
+/* ---------- RUN ---------- */
+const R={hist:[],ed:rEd(),done:false,last:null,fm:null};
+const OPT=[[['x!','!'],['nPr','nPr'],['nCr','nCr'],['Ran#','Ran#'],['Abs','Abs '],['▷',null]],[['Int','Int '],['Frac','Frac '],['sinh','sinh '],['cosh','cosh '],['tanh','tanh '],['▷',null]]];
+APPS.RUN={
+  draw(){const bl=[];R.hist.forEach(h=>{bl.push({t:h.toks});bl.push({t:h.rt,right:true})});bl.push({t:R.ed.toks,cur:R.ed.cur});
+    let tot=0;bl.forEach(b=>{b.s=mMeas(mParse(b.t));b.h=b.s.asc+b.s.desc;tot+=b.h});
+    let y=Math.min(0,56-tot);c.save();c.beginPath();c.rect(0,0,W*SC,56*SC);c.clip();
+    bl.forEach(b=>{const ax=y+b.s.asc;
+      if(b.cur!==undefined){DRY=true;CUR=null;mDraw(b.s,0,ax,b.cur);DRY=false;const x=-Math.max(0,(CUR?CUR.x:0)-114);CUR=null;mDraw(b.s,x,ax,b.cur);
+        if(blink&&CUR){c.fillStyle=INK;c.fillRect(CUR.x*SC,(CUR.y+2)*SC,6*SC,2*SC)}}
+      else mDraw(b.s,b.right?127-b.s.wid:0,ax,-1);
+      y+=b.h});
+    c.restore();if(R.fm!==null)fk(OPT[R.fm].map(o=>o[0]))},
+  key(ev){
+    if(R.fm!==null){const m=/^F([1-6])$/.exec(ev);if(m){const o=OPT[R.fm][m[1]-1];if(o[1]===null){R.fm=(R.fm+1)%OPT.length;return}ev='t:'+o[1]}else if(ev==='EXIT'){R.fm=null;return}}
+    if(ev==='OPTN'){R.fm=R.fm===null?0:null;return}
+    if(ev.startsWith('t:')){const t=ev.slice(2);if(R.done&&!R.ed.toks.length&&['+','−','×','÷','^','²','⁻¹','!','nPr','nCr','ˣ√','→'].includes(t))R.ed=rEd(['Ans']);R.done=false;edKey(R.ed,ev);return}
+    if(ev==='EXE'){let toks=R.ed.toks;if(!toks.length){if(!R.last)return;toks=R.last}
+      const ix=toks.lastIndexOf('→');let ex=toks,tg=null;if(ix>=0){ex=toks.slice(0,ix);const t=toks.slice(ix+1);if(t.length!==1||!/^[A-Z]$/.test(t[0]))SE();tg=t[0]}
+      const v=evalG(ex);if(tg)G.vars[tg]=v;G.ans=v;
+      R.hist.push({toks:toks.slice(),rt:resToks(v),v,dec:false});if(R.hist.length>30)R.hist.shift();R.last=toks.slice();R.ed=rEd();R.done=true;return}
+    if(ev==='AC'){if(!R.ed.toks.length)R.hist=[];R.ed=rEd();R.done=false;return}
+    if(ev==='FD'){const h=R.hist[R.hist.length-1];if(h&&isF(h.v)&&h.v.d!==1){h.dec=!h.dec;h.rt=resToks(h.v,h.dec)}return}
+    if((ev==='UP'||ev==='DOWN')&&R.ed.toks.length){fracNav(R.ed,ev.toLowerCase());return}
+    if(!R.ed.toks.length&&R.last&&(ev==='LEFT'||ev==='RIGHT'||ev==='UP')){R.ed=rEd(R.last,ev==='RIGHT'?0:undefined);R.done=false;return}
+    edKey(R.ed,ev)}};
+/* ---------- function list (GRAPH + TABLE) ---------- */
+const Y=[0,1,2,3,4,5].map(()=>({toks:[],sel:false}));
+const FL={row:0,ed:null};
+const selY=()=>Y.map((y,k)=>k).filter(k=>Y[k].sel&&Y[k].toks.length);
+function drawFL(title,fkeys){txt(0,0,title);Y.forEach((y,k)=>{const lab='Y'+(k+1)+(y.sel?'=':':');
+  if(k===FL.row&&FL.ed){txt(0,1+k,lab);drawEd(FL.ed,3,1+k,18)}else txt(0,1+k,(lab+y.toks.map(tokStr).join('')).padEnd(21),k===FL.row)});fk(fkeys)}
+function keyFL(ev){
+  if(FL.ed){if(ev==='EXE'){const tk=FL.ed.toks;if(tk.length){const keep=G.vars.X;try{G.vars.X=1.2345;evalG(tk)}catch(e){if(e.kind!=='Math ERROR'){G.vars.X=keep;throw e}}G.vars.X=keep}
+      Y[FL.row]={toks:tk.slice(),sel:tk.length>0};FL.ed=null;FL.row=Math.min(5,FL.row+1)}
+    else if(ev==='EXIT'||ev==='AC')FL.ed=null;else edKey(FL.ed,ev);return true}
+  if(ev.startsWith('t:')){FL.ed=mkEd();edKey(FL.ed,ev);return true}
+  if(ev==='UP'){FL.row=Math.max(0,FL.row-1);return true}if(ev==='DOWN'){FL.row=Math.min(5,FL.row+1);return true}
+  if((ev==='LEFT'||ev==='RIGHT')&&Y[FL.row].toks.length){FL.ed=mkEd(Y[FL.row].toks,ev==='RIGHT'?0:undefined);return true}
+  if(ev==='F1'){if(Y[FL.row].toks.length)Y[FL.row].sel=!Y[FL.row].sel;return true}
+  if(ev==='F2'||ev==='DEL'){Y[FL.row]={toks:[],sel:false};return true}
+  return false}
+function yAt(k,x){G.vars.X=x;try{const v=num(evalG(Y[k].toks));return isFinite(v)?v:NaN}catch(e){return NaN}}
+/* ---------- GRAPH ---------- */
+const INIT={xmin:-6.3,xmax:6.3,xscl:1,ymin:-3.1,ymax:3.1,yscl:1};
+const GR={scr:'list',mode:'view',V:{...INIT},orig:null,tx:63,fi:0,pts:[],pk:0,label:'',form:null,back:'list'};
+const gx=p=>GR.V.xmin+p*(GR.V.xmax-GR.V.xmin)/126,gpx=x=>(x-GR.V.xmin)/(GR.V.xmax-GR.V.xmin)*126,gpy=y=>(GR.V.ymax-y)/(GR.V.ymax-GR.V.ymin)*62;
+function drawGraph(){const V=GR.V;
+  const y0=Math.round(gpy(0)),x0=Math.round(gpx(0));
+  if(y0>=0&&y0<=62){for(let p=0;p<=126;p++)px(p,y0);if(V.xscl>0&&(V.xmax-V.xmin)/V.xscl<=64)for(let t=Math.ceil(V.xmin/V.xscl);t*V.xscl<=V.xmax;t++)px(Math.round(gpx(t*V.xscl)),y0-1)}
+  if(x0>=0&&x0<=126){for(let p=0;p<=62;p++)px(x0,p);if(V.yscl>0&&(V.ymax-V.ymin)/V.yscl<=32)for(let t=Math.ceil(V.ymin/V.yscl);t*V.yscl<=V.ymax;t++)px(x0+1,Math.round(gpy(t*V.yscl)))}
+  c.save();c.beginPath();c.rect(0,0,127*SC,63*SC);c.clip();
+  selY().forEach(k=>{let prev=null;for(let p=0;p<=126;p++){const y=yAt(k,gx(p));if(Number.isNaN(y)){prev=null;continue}const q=Math.max(-250,Math.min(320,gpy(y)));
+    if(prev!==null&&!((prev<0&&q>62)||(prev>62&&q<0)))line(p-1,prev,p,q);else px(p,Math.round(q));prev=q}});
+  c.restore()}
+function status(x,y,label){c.fillStyle=BG;c.fillRect(0,56*SC,W*SC,8*SC);c.fillStyle=INK;c.font='bold 21px "DejaVu Sans Mono","Menlo","Consolas",monospace';c.textAlign='left';c.textBaseline='middle';
+  c.fillText('X='+nfmt(x).replace('ᴇ','E'),6,60*SC+1);c.fillText('Y='+(Number.isNaN(y)?'ERROR':nfmt(y).replace('ᴇ','E')),262,60*SC+1);
+  if(label){c.fillStyle=BG;c.fillRect(0,48*SC,chars(label).length*6*SC,8*SC);txt(0,6,label)}}
+function cross(x,y){const p=Math.round(gpx(x)),q=Math.round(gpy(y));if(Number.isNaN(q))return;for(let d=-3;d<=3;d++){px(p+d,q);px(p,q+d)}}
+const cleanX=x=>Math.abs(x)<1e-11?0:parseFloat(x.toPrecision(12));
+function scanF(f){const N=504,xs=[],ys=[];for(let k=0;k<=N;k++){const x=GR.V.xmin+k*(GR.V.xmax-GR.V.xmin)/N;xs.push(x);ys.push(f(x))}return{xs,ys,N}}
+function dedupe(a){a.sort((p,q)=>p-q);return a.filter((v,k)=>k===0||Math.abs(v-a[k-1])>1e-7*(1+Math.abs(v)))}
+function findRoots(f){const{xs,ys,N}=scanF(f),out=[];
+  for(let k=0;k<N;k++){const a=ys[k],b=ys[k+1];if(Number.isNaN(a)||Number.isNaN(b))continue;
+    if(a===0)out.push(xs[k]);else if(a*b<0){let lo=xs[k],hi=xs[k+1],fa=a;for(let i=0;i<70;i++){const m=(lo+hi)/2,fm=f(m);if(Number.isNaN(fm))break;if(fm===0){lo=hi=m;break}if(fm*fa<0)hi=m;else{lo=m;fa=fm}}
+      const r=(lo+hi)/2;if(Math.abs(f(r))<1e-6*(1+Math.abs(a)+Math.abs(b)))out.push(r)}}
+  if(ys[N]===0)out.push(xs[N]);return dedupe(out.map(cleanX))}
+function findExt(f,sg){const{xs,ys,N}=scanF(f),out=[],g=x=>sg*f(x),ph=(Math.sqrt(5)-1)/2;
+  for(let k=1;k<N;k++){const a=sg*ys[k-1],b=sg*ys[k],d=sg*ys[k+1];if(Number.isNaN(a+b+d)||!(b>a&&b>=d))continue;
+    let lo=xs[k-1],hi=xs[k+1];for(let i=0;i<90;i++){const m1=hi-ph*(hi-lo),m2=lo+ph*(hi-lo);if(g(m1)<g(m2))lo=m1;else hi=m2}
+    let x=(lo+hi)/2;for(const q of[1e3,1e5,1e7]){const r=Math.round(x*q)/q;if(g(r)>=g(x)){x=r;break}}out.push(x)}
+  return dedupe(out.map(cleanX))}
+function gsolve(n){const s=selY();if(!s.length)return;const f=x=>yAt(s[0],x);let xs=[],lab='';
+  if(n===1){xs=findRoots(f);lab='ROOT'}else if(n===2){xs=findExt(f,1);lab='MAX'}else if(n===3){xs=findExt(f,-1);lab='MIN'}
+  else if(n===4){xs=Number.isNaN(f(0))?[]:[0];lab='Y-ICPT'}
+  else if(n===5){if(s.length<2)return msg('Needs two graphs');xs=findRoots(x=>yAt(s[0],x)-yAt(s[1],x));lab='ISCT'}
+  else return;
+  if(!xs.length)return msg('Not Found');
+  GR.pts=xs.map(x=>({x,y:cleanX(f(x))}));GR.pk=0;GR.label=lab;GR.mode='pt'}
+function zoom(k){const V=GR.V;if(!GR.orig)GR.orig={...V};
+  if(k===3||k===4){const f=k===3?.5:2,cx=(V.xmin+V.xmax)/2,cy=(V.ymin+V.ymax)/2,hx=(V.xmax-V.xmin)/2*f,hy=(V.ymax-V.ymin)/2*f;Object.assign(V,{xmin:cleanX(cx-hx),xmax:cleanX(cx+hx),ymin:cleanX(cy-hy),ymax:cleanX(cy+hy)})}
+  else if(k===5){let lo=Infinity,hi=-Infinity;selY().forEach(j=>{for(let p=0;p<=126;p++){const y=yAt(j,gx(p));if(!Number.isNaN(y)){lo=Math.min(lo,y);hi=Math.max(hi,y)}}});
+    if(lo<hi){const pd=(hi-lo)*.05;V.ymin=cleanX(lo-pd);V.ymax=cleanX(hi+pd)}else if(lo===hi){V.ymin=lo-1;V.ymax=hi+1}}
+  else if(k===6){Object.assign(V,GR.orig)}else return;
+  GR.mode='view'}
+function openVwin(){const V=GR.V,fd=(label,k)=>({label,get:()=>V[k],set:v=>{V[k]=v}});GR.back=GR.scr;
+  GR.form=mkForm('View Window',[fd('Xmin ','xmin'),fd(' max ','xmax'),fd(' scale','xscl'),fd('Ymin ','ymin'),fd(' max ','ymax'),fd(' scale','yscl')],['INIT','TRIG','STD'],n=>{
+    if(n===1)Object.assign(V,INIT);
+    else if(n===2){const d=G.angle==='D',g=G.angle==='G';Object.assign(V,{xmin:d?-540:g?-600:cleanX(-3*Math.PI),xmax:d?540:g?600:cleanX(3*Math.PI),xscl:d?90:g?100:cleanX(Math.PI/2),ymin:-1.6,ymax:1.6,yscl:.5})}
+    else if(n===3)Object.assign(V,{xmin:-10,xmax:10,xscl:1,ymin:-10,ymax:10,yscl:1})},()=>{const V2=GR.V;if(V2.xmin>=V2.xmax||V2.ymin>=V2.ymax){msg('Range ERROR');Object.assign(V2,INIT)}GR.scr=GR.back==='graph'?'graph':'list';GR.orig=null});
+  GR.scr='vwin'}
+APPS.GRAPH={
+  open(){GR.scr='list';FL.ed=null},
+  draw(){
+    if(GR.scr==='list')return drawFL('Graph Func   :Y=',['SEL','DEL','','','','DRAW']);
+    if(GR.scr==='vwin')return drawForm(GR.form);
+    drawGraph();const s=selY();
+    if(GR.mode==='trace'&&s.length){const k=s[GR.fi%s.length],x=cleanX(gx(GR.tx)),y=yAt(k,x);cross(x,y);status(x,y,'Y'+(k+1))}
+    else if(GR.mode==='pt'){const p=GR.pts[GR.pk];cross(p.x,p.y);status(p.x,p.y,GR.label)}
+    else if(GR.mode==='zoom')fk(['','','IN','OUT','AUTO','ORIG']);
+    else if(GR.mode==='gsolv')fk(['ROOT','MAX','MIN','Y-ICPT','ISCT',''])},
+  key(ev){
+    if(GR.scr==='vwin')return formKey(GR.form,ev);
+    if(ev==='VWIN')return openVwin();
+    if(GR.scr==='list'){if(keyFL(ev))return;if(ev==='F6'||ev==='EXE'){GR.scr='graph';GR.mode='view'}return}
+    const s=selY(),V=GR.V,m=/^F([1-6])$/.exec(ev);
+    if(GR.mode==='view'){
+      if(ev==='F1'||ev==='TRACE'){if(s.length){GR.mode='trace';GR.tx=63;GR.fi=0}}
+      else if(ev==='F2'||ev==='ZOOM')GR.mode='zoom';else if(ev==='F3')openVwin();
+      else if(ev==='F5'||ev==='GSOLV'){if(s.length)GR.mode='gsolv'}
+      else if(ev==='F6'||ev==='GT'||ev==='EXIT')GR.scr='list';
+      else{const d={LEFT:[-1,0],RIGHT:[1,0],UP:[0,1],DOWN:[0,-1]}[ev];if(d){const dx=d[0]*(V.xmax-V.xmin)/6,dy=d[1]*(V.ymax-V.ymin)/6;V.xmin=cleanX(V.xmin+dx);V.xmax=cleanX(V.xmax+dx);V.ymin=cleanX(V.ymin+dy);V.ymax=cleanX(V.ymax+dy)}}
+      return}
+    if(ev==='EXIT'||ev==='AC'){GR.mode=GR.mode==='pt'?'gsolv':'view';return}
+    if(GR.mode==='trace'){if(ev==='LEFT')GR.tx=Math.max(0,GR.tx-1);else if(ev==='RIGHT')GR.tx=Math.min(126,GR.tx+1);else if(ev==='UP'||ev==='DOWN')GR.fi=(GR.fi+(ev==='UP'?s.length-1:1))%s.length}
+    else if(GR.mode==='zoom'){if(m)zoom(+m[1])}
+    else if(GR.mode==='gsolv'){if(m)gsolve(+m[1])}
+    else if(GR.mode==='pt'){if(ev==='LEFT')GR.pk=Math.max(0,GR.pk-1);else if(ev==='RIGHT')GR.pk=Math.min(GR.pts.length-1,GR.pk+1)}}};
+/* ---------- EQUA ---------- */
+const EQ={scr:'top',kind:'siml',n:2,M:[],grid:null,view:null};
+const SV={ed:null,vars:[],vals:{},lower:-1e99,upper:1e99,idx:0,top:0,sub:null,res:null};
+const SUP={2:'²',3:'³',4:'⁴',5:'⁵',6:'⁶'};
+/* the formula line the real calculator shows under the grid: anX+bnY=cn / aX²+bX+c=0 */
+function eqSegs(g){const n=EQ.n;
+  if(EQ.kind==='siml'){const r=g.r+1,co='abcdefg',vn='XYZTUV',segs=[];
+    for(let k=0;k<n;k++)segs.push({t:(k?'+':'')+co[k]+r+vn[k],col:k});
+    segs.push({t:'='+co[n]+r,col:n});return segs}
+  const co='abcdefg',d=n-1,segs=[];
+  for(let k=0;k<=d;k++){const e=d-k;segs.push({t:(k?'+':'')+co[k]+(e>=1?'X':'')+(e>=2?SUP[e]:''),col:k})}
+  segs.push({t:'=0',col:-1});return segs}
+function eqFormula(g){const segs=eqSegs(g);let pos=0;segs.forEach(sg=>{sg.at=pos;pos+=chars(sg.t).length});
+  const total=pos,cur=segs.find(sg=>sg.col===g.c)||segs[0];
+  const st=total<=21?0:Math.max(0,Math.min(total-21,cur.at-3));
+  segs.forEach(sg=>txt(sg.at-st,5,sg.t,sg.col===g.c))}
+function eqGrid(){const s=EQ.kind==='siml',rows=s?EQ.n:1,cols=EQ.n+1;EQ.M=Array.from({length:rows},()=>Array(cols).fill(0));
+  EQ.grid=mkGrid({nCols:()=>cols,nRows:()=>rows,colLabel:cc=>'abcdefg'[cc],rowLabel:r=>s?String(r+1):'',get:(r,cc)=>EQ.M[r][cc],set:(r,cc,v)=>{EQ.M[r][cc]=v},adv:'right',fkeys:['SOLV','','CLR'],vis:4,formula:eqFormula});EQ.scr='grid'}
+/* ----- Solver: Newton-Raphson on f(v) = left side - right side ----- */
+function svSplit(toks){const i=toks.indexOf('=');
+  const lhs=i<0?toks:toks.slice(0,i),rhs=i<0?['0']:toks.slice(i+1);
+  if(i>=0&&toks.indexOf('=',i+1)>=0)SE();if(!lhs.length||!rhs.length)SE();return[lhs,rhs]}
+function svOpen(){const toks=SV.ed.toks;svSplit(toks);
+  const vs=[...new Set(toks.filter(t=>/^[A-Z]$/.test(t)))].sort();if(!vs.length)SE();
+  SV.vars=vs;SV.vals={};vs.forEach(v=>{SV.vals[v]=num(G.vars[v])});SV.lower=-1e99;SV.upper=1e99;SV.idx=0;SV.top=0;SV.sub=null;EQ.scr='svar'}
+const svRows=()=>SV.vars.length+2;
+function svGet(k){return k<SV.vars.length?SV.vals[SV.vars[k]]:k===SV.vars.length?SV.lower:SV.upper}
+function svSet(k,v){if(k<SV.vars.length)SV.vals[SV.vars[k]]=v;else if(k===SV.vars.length)SV.lower=v;else SV.upper=v}
+function svLabel(k){return k<SV.vars.length?SV.vars[k]:k===SV.vars.length?'Lower':'Upper'}
+function svSolve(){const name=SV.vars[SV.idx];
+  const[lhs,rhs]=svSplit(SV.ed.toks),keep={};SV.vars.forEach(v=>{keep[v]=G.vars[v];G.vars[v]=SV.vals[v]});
+  try{
+    const f=x=>{G.vars[name]=x;return num(evalG(lhs))-num(evalG(rhs))};
+    const lo=SV.lower,hi=SV.upper,cl=x=>Math.max(lo,Math.min(hi,x));
+    let x=cl(SV.vals[name]),ok=false;
+    for(let it=0;it<100;it++){
+      const fx=f(x);if(!isFinite(fx))ME();
+      if(fx===0){ok=true;break}
+      const h=1e-7*Math.max(1,Math.abs(x));let d=(f(x+h)-f(x-h))/(2*h);
+      if(!isFinite(d))ME();
+      if(Math.abs(d)<1e-300){x=cl(x+(it%2?1:-1)*(1+Math.abs(x))*1e-3*(it+1));continue}
+      const nx=cl(x-fx/d),dx=Math.abs(nx-x);x=nx;
+      if(dx<=1e-14*(1+Math.abs(x))&&Math.abs(f(x))<=1e-9*(1+Math.abs(fx))){ok=true;break}
+      if(dx<=1e-14*(1+Math.abs(x))){ok=Math.abs(f(x))<1e-9;break}}
+    if(!ok)throw new CalcError('Time Out');
+    const L=num(evalG((G.vars[name]=x,lhs))),R=num(evalG(rhs));
+    SV.vals[name]=x;SV.res={name,x,L,R};SV.top=0;EQ.scr='sres'}
+  finally{SV.vars.forEach(v=>{G.vars[v]=keep[v]})}}
+APPS.EQUA={
+  open(){EQ.scr='top'},
+  draw(){
+    if(EQ.scr==='top'){txt(0,0,'Equation');txt(0,2,'Select Type');txt(0,3,'F1:Simultaneous');txt(0,4,'F2:Polynomial');txt(0,5,'F3:Solver');fk(['SIML','POLY','SOLV'])}
+    else if(EQ.scr==='n'){txt(0,0,EQ.kind==='siml'?'Simul Equation':'Polynomial');txt(0,2,EQ.kind==='siml'?'Number Of Unknowns?':'Degree?');fk(['2','3','4','5','6'])}
+    else if(EQ.scr==='grid'){drawGrid(EQ.grid);}
+    else if(EQ.scr==='seq'){txt(0,0,'Equation Solver');txt(0,2,'Eq:');drawEd(SV.ed,3,2,18);fk(['','','','','',''])}
+    else if(EQ.scr==='svar'){const nr=svRows();SV.top=Math.max(0,Math.min(SV.top,nr-6));if(SV.idx<SV.top)SV.top=SV.idx;if(SV.idx>SV.top+5)SV.top=SV.idx-5;
+      txt(0,0,('Eq:'+edStr(SV.ed)).slice(0,21));
+      for(let i=0;i<6&&SV.top+i<nr;i++){const k=SV.top+i,lab=svLabel(k)+'=';
+        if(SV.sub&&k===SV.idx){txt(0,1+i,lab);drawEd(SV.sub,lab.length,1+i,21-lab.length)}
+        else txt(0,1+i,(lab+nfmt(svGet(k))).padEnd(21).slice(0,21),k===SV.idx)}
+      fk(['','','','','','SOLV'])}
+    else if(EQ.scr==='sres'){const r=SV.res;txt(0,0,'Solve');txt(0,1,(r.name+'='+nfmt(r.x)).slice(0,21),true);
+      txt(0,3,('Lft='+nfmt(r.L)).slice(0,21));txt(0,4,('Rgt='+nfmt(r.R)).slice(0,21));fk(['REPT'])}
+    else drawLines(EQ.view)},
+  key(ev){const m=/^F([1-6])$/.exec(ev);
+    if(EQ.scr==='top'){if(ev==='F1'||ev==='F2'){EQ.kind=ev==='F1'?'siml':'poly';EQ.scr='n'}else if(ev==='F3'){if(!SV.ed)SV.ed=mkEd();EQ.scr='seq'}}
+    else if(EQ.scr==='n'){if(m&&+m[1]<=5){EQ.n=+m[1]+1;eqGrid()}else if(ev==='EXIT')EQ.scr='top'}
+    else if(EQ.scr==='seq'){if(ev==='EXIT')EQ.scr='top';else if(ev==='AC')SV.ed=mkEd();else if(ev==='EXE'){if(SV.ed.toks.length)svOpen()}else edKey(SV.ed,ev)}
+    else if(EQ.scr==='svar'){
+      if(SV.sub){if(ev==='EXE'){const v=num(evalG(SV.sub.toks));svSet(SV.idx,v);SV.sub=null;SV.idx=Math.min(svRows()-1,SV.idx+1)}
+        else if(ev==='AC'||ev==='EXIT')SV.sub=null;else edKey(SV.sub,ev);return}
+      if(ev.startsWith('t:')){SV.sub=mkEd();edKey(SV.sub,ev)}
+      else if(ev==='UP')SV.idx=Math.max(0,SV.idx-1);else if(ev==='DOWN'||ev==='EXE')SV.idx=Math.min(svRows()-1,SV.idx+1);
+      else if(ev==='F6'){if(SV.idx>=SV.vars.length)throw new CalcError('Syntax ERROR');svSolve()}
+      else if(ev==='EXIT')EQ.scr='seq'}
+    else if(EQ.scr==='sres'){if(ev==='EXIT'||ev==='F1')EQ.scr='svar'}
+    else if(EQ.scr==='grid'){if(gridKey(EQ.grid,ev))return;
+      if(ev==='EXIT')EQ.scr='n';else if(ev==='F3'){EQ.M.forEach(r=>r.fill(0))}
+      else if(ev==='F1'){let lines;
+        if(EQ.kind==='siml'){let sol;try{sol=solveLinear(EQ.M)}catch(e){throw new CalcError('Ma ERROR')}lines=sol.map((v,k)=>('XYZTUV'[k]+'='+nfmt(v)).slice(0,21))}
+        else lines=polyRoots(EQ.M[0]).map((z,k)=>('x'+(k+1)+'='+nfmt(z.re)+(z.im?(z.im<0?'-':'+')+nfmt(Math.abs(z.im))+'i':'')).slice(0,21));
+        EQ.view=mkLines(lines,['REPT']);EQ.scr='res'}}
+    else{if(ev==='EXIT'||ev==='F1')EQ.scr='grid';else linesKey(EQ.view,ev)}}};
+/* ---------- SET UP ---------- */
+const SU={row:0};
+const SROWS=[['Angle',()=>({D:'Deg',R:'Rad',G:'Gra'}[G.angle]),['Deg','Rad','Gra']],['Display',()=>G.fmt.type+G.fmt.n,['Fix','Sci','Norm']]];
+APPS.SETUP={
+  draw(){SROWS.forEach((r,k)=>txt(0,k,(r[0].padEnd(11)+':'+r[1]()).padEnd(21),k===SU.row));fk(SROWS[SU.row][2])},
+  key(ev){if(ev==='UP')SU.row=Math.max(0,SU.row-1);else if(ev==='DOWN')SU.row=Math.min(SROWS.length-1,SU.row+1);else if(ev==='EXIT'||ev==='EXE')G.app=G.prev;
+    const m=/^F([1-3])$/.exec(ev);if(!m)return;const n=+m[1];
+    if(SU.row===0)G.angle='DRG'[n-1];
+    else if(n===3)G.fmt={type:'Norm',n:G.fmt.type==='Norm'&&G.fmt.n===1?2:1};
+    else{const t=n===1?'Fix':'Sci';G.prompt={text:t+' [0~9]?',cb:d=>{G.fmt={type:t,n:d}}}}}};
+/* ---------- keys ---------- */
+const Dg=(n,al,sl)=>({l:String(n),al,sl,m:'t:'+n,a:al?'t:'+al:null,c:'num'});
+const KEYS={
+  F1:{l:'F1',sl:'Trace',m:'F1',s:'TRACE',c:'fk'},F2:{l:'F2',sl:'Zoom',m:'F2',s:'ZOOM',c:'fk'},F3:{l:'F3',sl:'V-Window',m:'F3',s:'VWIN',c:'fk'},F4:{l:'F4',sl:'Sketch',m:'F4',c:'fk'},F5:{l:'F5',sl:'G-Solv',m:'F5',s:'GSOLV',c:'fk'},F6:{l:'F6',sl:'G↔T',m:'F6',s:'GT',c:'fk'},
+  shift:{l:'SHIFT',c:'k-shift'},optn:{l:'OPTN',m:'OPTN'},vars:{l:'VARS',sl:'PRGM',m:'VARS'},menu:{l:'MENU',sl:'SET UP',m:'MENU',s:'SETUP'},
+  alpha:{l:'ALPHA',sl:'A-LOCK',c:'k-alpha'},sq:{l:'<i class="ser">x</i>²',sl:'√',al:'r',m:'t:²',s:'t:√'},pw:{l:'<span class="caret">∧</span>',sl:'ˣ√',al:'θ',m:'t:^',s:'t:ˣ√'},exit:{l:'EXIT',sl:'QUIT',m:'EXIT',s:'EXIT'},
+  xt:{l:'X,<i class="ser">θ</i>,T',sl:'∠',al:'A',m:'t:X',a:'t:A'},log:{l:'log',sl:'10ˣ',al:'B',m:'t:log ',s:'t:10^',a:'t:B'},ln:{l:'ln',sl:'eˣ',al:'C',m:'t:ln ',s:'t:e^',a:'t:C'},
+  sin:{l:'sin',sl:'sin⁻¹',al:'D',m:'t:sin ',s:'t:sin⁻¹ ',a:'t:D'},cos:{l:'cos',sl:'cos⁻¹',al:'E',m:'t:cos ',s:'t:cos⁻¹ ',a:'t:E'},tan:{l:'tan',sl:'tan⁻¹',al:'F',m:'t:tan ',s:'t:tan⁻¹ ',a:'t:F'},
+  frac:{l:'<span class="kfrac"><i></i><i></i></span>',sl:'▪▫/▫',al:'G',m:'FRAC',s:'MIXFRAC',a:'t:G',aria:'fraction'},fd:{l:'S↔D',sl:'a b/c↔d/c',al:'H',m:'FD',a:'t:H'},lp:{l:'(',sl:'∛',al:'I',m:'t:(',s:'t:∛',a:'t:I'},rp:{l:')',sl:'x⁻¹',al:'J',m:'t:)',s:'t:⁻¹',a:'t:J'},comma:{l:',',al:'K',m:'t:,',a:'t:K'},sto:{l:'→',al:'L',m:'t:→',a:'t:L'},
+  n7:Dg(7,'M','CAPTURE'),n8:Dg(8,'N','CLIP'),n9:Dg(9,'O','PASTE'),del:{l:'DEL',sl:'INS',al:'UNDO',m:'DEL',c:'k-del'},ac:{l:'AC<sup>/ON</sup>',sl:'OFF',m:'AC',s:'OFF',c:'k-del'},
+  n4:Dg(4,'P','CATALOG'),n5:Dg(5,'Q'),n6:Dg(6,'R'),mul:{l:'×',sl:'{',al:'S',m:'t:×',a:'t:S',c:'num'},div:{l:'÷',sl:'}',al:'T',m:'t:÷',a:'t:T',c:'num'},
+  n1:Dg(1,'U','List'),n2:Dg(2,'V','Mat'),n3:Dg(3,'W'),add:{l:'+',sl:'[',al:'X',m:'t:+',a:'t:X',c:'num'},sub:{l:'−',sl:']',al:'Y',m:'t:−',a:'t:Y',c:'num'},
+  n0:Dg(0,'Z','i'),dot:{l:'•',sl:'=',al:'SPACE',m:'t:.',s:'t:=',c:'num'},exp:{l:'×10<sup><i class="ser">x</i></sup>',sl:'π',al:'”',m:'t:EE',s:'t:π',c:'num'},neg:{l:'(−)',sl:'Ans',m:'t:-',s:'t:Ans',c:'num'},exe:{l:'EXE',sl:'↵',m:'EXE',c:'num exe'},
+  up:{l:'▲',m:'UP'},down:{l:'▼',m:'DOWN'},left:{l:'◀',m:'LEFT'},right:{l:'▶',m:'RIGHT'}};
+const ROWS6=[['xt','log','ln','sin','cos','tan'],['frac','fd','lp','rp','comma','sto']];
+const ROWS5=[['n7','n8','n9','del','ac'],['n4','n5','n6','mul','div'],['n1','n2','n3','add','sub'],['n0','dot','exp','neg','exe']];
+function press(id){const k=KEYS[id];if(!k)return;
+  if(id==='shift'){G.shift=!G.shift;G.alpha=false;return draw()}
+  if(id==='alpha'){G.alpha=!G.alpha;G.shift=false;return draw()}
+  const ev=G.shift&&k.s?k.s:G.alpha&&k.a?k.a:k.m;G.shift=G.alpha=false;blink=true;
+  if(!ev)return draw();
+  if(G.off){if(id==='ac')G.off=false;return draw()}
+  if(ev==='OFF'){G.off=true;return draw()}
+  if(G.msg){G.msg=null;return draw()}
+  if(G.prompt){const m=/^t:(\d)$/.exec(ev);if(m){G.prompt.cb(+m[1]);G.prompt=null}else if(ev==='EXIT'||ev==='AC')G.prompt=null;return draw()}
+  if(ev==='MENU')G.app='MENU';
+  else if(ev==='SETUP'){if(G.app!=='SETUP'){G.prev=G.app;G.app='SETUP'}}
+  else{try{APPS[G.app].key(ev)}catch(e){if(!(e instanceof CalcError))console.error(e);msg(e.kind||'Syntax ERROR')}}
+  draw()}
+function box(lines){const w=Math.max(...lines.map(l=>chars(l).length))+2,h=lines.length+2,x0=Math.floor((21-w)/2),y0=Math.floor((8-h)/2);
+  c.fillStyle=BG;c.fillRect(x0*6*SC,y0*8*SC,w*6*SC,h*8*SC);c.strokeStyle=INK;c.lineWidth=SC;c.strokeRect(x0*6*SC+2,y0*8*SC+2,w*6*SC-4,h*8*SC-4);
+  lines.forEach((l,k)=>txt(x0+1,y0+1+k,l))}
+function wrap(s,n){const out=[];let cur='';s.split(' ').forEach(w=>{if((cur+' '+w).trim().length>n){out.push(cur);cur=w}else cur=(cur+' '+w).trim()});if(cur)out.push(cur);return out}
+function draw(){if(!c)return;root.querySelector('#gx-shift').classList.toggle('lit',G.shift);root.querySelector('#gx-alpha').classList.toggle('lit',G.alpha);cls();if(G.off)return;
+  APPS[G.app].draw();
+  if(G.prompt)box([G.prompt.text]);
+  if(G.msg)box(wrap(G.msg,17).concat(['Press:[EXIT]']));
+  if(G.shift||G.alpha){txt(20,0,G.shift?'S':'A',true)}}
+function keyBtn(id){const k=KEYS[id];return'<div class="kc"><div class="kl"><span class="sl">'+(k.sl||'')+'</span><span class="al">'+(k.al||'')+'</span></div><button type="button" class="key '+(k.c||'fn')+'" data-k="'+id+'" id="gx-'+id+'"'+(k.aria?' aria-label="'+k.aria+'"':'')+'>'+k.l+'</button></div>'}
+function mount(el){root=el;
+  let h='<div class="lcd gx-lcd"><canvas id="gx-canvas" width="512" height="256" role="img" aria-label="Graphing calculator screen"></canvas></div><div class="keys">';
+  h+='<div class="grid6">'+['F1','F2','F3','F4','F5','F6'].map(keyBtn).join('')+'</div>';
+  h+='<div class="grid6 top">'+keyBtn('shift')+keyBtn('optn')+keyBtn('vars')+keyBtn('menu')+'<div class="dpad" style="grid-row:span 2">'+['up','left','right','down'].map(d=>'<button type="button" class="key dp dp-'+d+'" data-k="'+d+'" id="gx-'+d+'" aria-label="'+d+'">'+KEYS[d].l+'</button>').join('')+'</div>';
+  h+=keyBtn('alpha')+keyBtn('sq')+keyBtn('pw')+keyBtn('exit')+'</div>';
+  h+='<div class="grid6">'+ROWS6.map(r=>r.map(keyBtn).join('')).join('')+'</div>';
+  h+='<div class="grid5">'+ROWS5.map(r=>r.map(keyBtn).join('')).join('')+'</div></div>';
+  el.innerHTML=h;cv=el.querySelector('canvas');c=cv.getContext('2d');
+  el.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b)press(b.dataset.k)});
+  setInterval(()=>{blink=!blink;draw()},530);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+  draw()}
+const KB={Enter:'exe','=':'exe',Backspace:'del',Escape:'exit',Delete:'ac',ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right','+':'add','-':'sub','*':'mul','/':'div','(':'lp',')':'rp','.':'dot','^':'pw',x:'xt',X:'xt',',':'comma',F1:'F1',F2:'F2',F3:'F3',F4:'F4',F5:'F5',F6:'F6'};
+function keyboard(e){if(e.key==='='&&G.app==='EQUA'&&EQ.scr==='seq'){G.shift=true;press('dot');return true}
+  let id=KB[e.key];if(/^\d$/.test(e.key))id='n'+e.key;if(!id)return false;press(id);return true}
+return{mount,press,keyboard,G,R,GR,Y,EQ}})();
+(function(){
+  FX.mount(document.getElementById('fx'));GX.mount(document.getElementById('gx'));
+  const us=document.getElementById('unit-sci'),ug=document.getElementById('unit-graph'),pick=document.getElementById('calc-pick');
+  let active='sci';try{if(localStorage.getItem('calc')==='graph')active='graph'}catch(e){}
+  const set=a=>{active=a;pick.value=a;us.hidden=a!=='sci';ug.hidden=a!=='graph';try{localStorage.setItem('calc',a)}catch(e){}};
+  pick.addEventListener('change',()=>{set(pick.value);pick.blur()});set(active);
+  document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.target===pick)return;
+    if(e.key==='Enter'&&document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+    if((active==='sci'?FX:GX).keyboard(e))e.preventDefault()});
+})();
+</script>
+
+</body></html>
